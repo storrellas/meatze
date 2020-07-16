@@ -66,58 +66,149 @@
 
 
   <div class="container">
-    <div class="row mt-3">
-      <div class="col-md-4">
-        <div>
-          <div>Project Size: 10MW</div>
-          <div>Total CAPEX: XXXXX$</div>
-          <div>Monthly OPEX: XXXXX$</div>
-          <div>Expected PBP: XX Month</div>
+    <section class="mt-3" style="background-color: #DDDDDD; padding: 10px">
+    
+      <div class="row col-md-12 mt-3">
+        <h4>Project Configuration</h4>
+      </div>
+      <hr>
+      <div class="row mt-3">
+        <div class="col-md-4 input-group mb-3">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">MW</span>
+            </div>
+          </div>
+          <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
         </div>
+        <div class="col-md-4 input-group mb-3">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Electricity cost in kwh"
+              aria-label="Electricity cost in kwh" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">€</span>
+            </div>
+          </div>
+          <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+        </div>
+        <div class="col-md-4 input-group mb-3">
+    
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Annual hours of operation"
+              aria-label="Annual hours of operation" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">hours</span>
+            </div>
+          </div>
+          <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+        </div>
+      </div>
+    </section>
+    
+    
+    <section class="mt-3" style="background-color: #DDDDDD; padding: 10px">
 
-        <div class="mt-3">
-          <div>Miner Model: S19</div>
-          <div>Miner Qty: XXX</div>
-          <div>Container type: Air cooled</div>
-          <div>Container qty</div>
+      <div class="row col-md-12 mt-3">
+        <h4>Project Estimate</h4>
+      </div>
+      <hr>
+      <div class="row mt-3">
+
+        <div class="col-md-4">
+
+
+          <div class="form-group">
+            <label for="exampleInputEmail1">Project Size</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Project Size">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Total CAPEX</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Total CAPEX">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Monthly OPEX</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Monthly OPEX">
+          </div>
+          <div class="form-group">
+              <label for="exampleInputEmail1">Expected PBP</label>
+              <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                placeholder="Expected PBP">
+          </div>
+
+          <div class="form-group" style="margin-top: 50px">
+            <label for="exampleInputEmail1">Miner Model</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Miner Model">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Miner Quantity</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Miner Quantity">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Container Type</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Container Type">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Container Quantity</label>
+            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Container Quantity">
+          </div>
+
+
+
+
+
+
         </div>
+        <div class="col-md-8">
+          <div id="chartdiv"></div>
+        </div>
+      </div>
+
+      <div class="row col-md-12 mt-3">
+        <h4>Project Simulation</h4>
+      </div>
+      <hr>
+      <div class="row col-md-12">
+
+        <table class="table" style="background-color: #F5F5F5	">
+          <thead style="background-color: #282828; color: #DDDDDD">
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">Income</th>
+              <th scope="col">Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>1000</td>
+              <td>500</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>1200</td>
+              <td>700</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>1200</td>
+              <td>700</td>
+            </tr>
+          </tbody>
+        </table>
 
       </div>
-      <div class="col-md-8">
-        <div id="chartdiv"></div>
-      </div>
-    </div>
 
-    <div class="row" style="margin-top: 100px">
+    </section>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Month</th>
-            <th scope="col">Income</th>
-            <th scope="col">Profit</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>1000</td>
-            <td>500</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>1200</td>
-            <td>700</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>1200</td>
-            <td>700</td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
   </div>
 
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
