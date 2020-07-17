@@ -6,5 +6,61 @@
 
 <p>My first paragraph.</p>
 
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
+
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
+
+  <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyBlcx8yw7hihZ4iEWupw9we6ZsWvkt5Vro",
+        authDomain: "meatze.firebaseapp.com",
+        databaseURL: "https://meatze.firebaseio.com",
+        projectId: "meatze",
+        storageBucket: "meatze.appspot.com",
+        messagingSenderId: "1002638510838",
+        appId: "1:1002638510838:web:0118ef204af0e7d6d37ad7"
+      };
+
+// Initialize Firebase with a "default" Firebase project
+var defaultProject = firebase.initializeApp(firebaseConfig);
+
+console.log(defaultProject.name);  // "[DEFAULT]"
+
+// // Option 1: Access Firebase services via the defaultProject variable
+// var defaultStorage = defaultProject.storage();
+// var defaultFirestore = defaultProject.firestore();
+
+// // Option 2: Access Firebase services using shorthand notation
+// defaultStorage = firebase.storage();
+// defaultFirestore = firebase.firestore();
+
+
+var db = firebase.firestore();
+
+
+// db.add({
+//   'param1': 'sergi',
+//   'param2': 'param'
+// })
+
+db.collection("users").doc("config").set({
+    id: 'sergi',
+    first: "Ada",
+    last: "Lovelace",
+    born: 1815
+})
+.then(function(docRef) {
+    console.log("Document written with ID: ", docRef.id);
+})
+.catch(function(error) {
+    console.error("Error adding document: ", error);
+});
+
+    </script>
+
 </body>
 </html>
