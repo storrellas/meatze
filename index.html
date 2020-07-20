@@ -75,7 +75,7 @@
       <div class="row mt-3">
         <div class="col-md-4 input-group mb-3">
           <div class="input-group">
-            <input type="text" class="form-control" placeholder="Project Size" aria-label="Project Size"
+            <input type="text" class="form-control user-input-data" id="project-size" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">MW</span>
@@ -85,7 +85,7 @@
         </div>
         <div class="col-md-4 input-group mb-3">
           <div class="input-group">
-            <input type="text" class="form-control" placeholder="Electricity cost in kwh"
+            <input type="text" class="form-control user-input-data" id="electricity-cost" placeholder="Electricity cost in kwh"
               aria-label="Electricity cost in kwh" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">$/kwh</span>
@@ -96,7 +96,7 @@
         <div class="col-md-4 input-group mb-3">
     
           <div class="input-group">
-            <input type="text" class="form-control" placeholder="Annual hours of operation"
+            <input type="text" class="form-control user-input-data" placeholder="Annual hours of operation"
               aria-label="Annual hours of operation" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">hours</span>
@@ -105,6 +105,38 @@
           <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
         </div>
       </div>
+      <div class="row mt-3">
+          <div class="col-md-6 input-group mb-3">
+              <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">Server Type</label>
+                  </div>
+                  <select class="custom-select user-input-data" id="server-type">
+                    <option>S17</option>
+                    <option>T17</option>
+                    <option>S9</option>
+                    <option>S19</option>
+                    <option>M20s</option>
+                    <option>M31s</option>
+                    <option>M30s+</option>
+                  </select>
+                </div>
+            <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+          </div>
+
+          <div class="col-md-6 input-group mb-3">
+              <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">Container Type</label>
+                  </div>
+                  <select class="custom-select user-input-data" id="container-type">
+                    <option>AirCooled</option>
+                    <option>LiquidCooled</option>
+                  </select>
+                </div>
+            <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+          </div>
+        </div>
     </section>
     
     
@@ -118,20 +150,19 @@
 
         <div class="col-md-4">
 
-
           <div class="form-group">
-            <label for="exampleInputEmail1">Project Size</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Project Size">
+              <label for="exampleInputEmail1">CAPEX Server</label>
+              <input readonly type="text" class="form-control" id="capex-server" aria-describedby="capex-server"
+                placeholder="CAPEX Server">
           </div>
           <div class="form-group">
-            <label for="exampleInputEmail1">Total CAPEX</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Total CAPEX">
+            <label for="exampleInputEmail1">CAPEX Total</label>
+            <input readonly type="text" class="form-control" id="capex-total" aria-describedby="capex-total"
+              placeholder="CAPEX Total">
           </div>
           <div class="form-group">
             <label for="exampleInputEmail1">Monthly OPEX</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+            <input readonly type="text" class="form-control" id="monthly-opex" aria-describedby="emailHelp"
               placeholder="Monthly OPEX">
           </div>
           <div class="form-group">
@@ -140,7 +171,7 @@
                 placeholder="Expected PBP">
           </div>
 
-          <div class="form-group" style="margin-top: 50px">
+          <!-- <div class="form-group" style="margin-top: 50px">
             <label for="exampleInputEmail1">Miner Model</label>
             <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
               placeholder="Miner Model">
@@ -159,12 +190,7 @@
             <label for="exampleInputEmail1">Container Quantity</label>
             <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
               placeholder="Container Quantity">
-          </div>
-
-
-
-
-
+          </div> -->
 
         </div>
         <div class="col-md-8">
@@ -228,7 +254,75 @@
   <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
   <!-- Chart code -->
-  <script>
+  <script type="text/javascript">
+
+    const SERVER_TYPE_LIST = {
+      S17  :  { price: 1440, hashing: 70,  consumption: 2.8 },
+      T17  :  { price: 960,  hashing: 58,  consumption: 2.9 },
+      S9   :  { price: 53.5, hashing: 10,  consumption: 0.72 },
+      S19  :  { price: 2160, hashing: 95,  consumption: 3.3 },
+      M20s :  { price: 900,  hashing: 68,  consumption: 3.3 },
+      M31s :  { price: 1320, hashing: 76,  consumption: 3.2 },
+      M30sPlus :  { price: 2760, hashing: 100, consumption: 3.4 }
+    }
+
+    const CAPEX_CONTAINER = {
+      AirCooled: 30000,
+      LiquidCooled: 100000
+    }
+    const CAPEX_CONTAINER_FACTOR = {
+      AirCooled: 1,
+      LiquidCooled: 1.3
+    }
+
+    function generate_capex(){
+
+      const server_type = $('#server-type').val()
+      const container_type = $('#container-type').val()
+
+      const project_size = $('#project-size').val()
+      const electricity_cost = $('#electricity-cost').val()
+
+      // CAPEX Server
+      const CAPEXServer = ( 1000 / (SERVER_TYPE_LIST[server_type].consumption * CAPEX_CONTAINER_FACTOR[container_type] ) ) * SERVER_TYPE_LIST[server_type].price
+      const CAPEXServerRound = Math.round(CAPEXServer * 100) / 100
+      $('#capex-server').val(CAPEXServerRound)
+
+      // CAPEX Project
+      if( project_size.length > 0){
+        const CAPEXProject = (CAPEXServer + CAPEX_CONTAINER[container_type]) * project_size
+        const CAPEXProjectRound = Math.round(CAPEXProject * 100) / 100
+        $('#capex-total').val(CAPEXProjectRound)
+      }else{
+        $('#capex-total').val('')
+      }
+
+
+      // Monthly OPEX
+      if( electricity_cost.length > 0 && project_size.length > 0){
+        const monthlyOPEX = electricity_cost * 24 * 30 * 100 * project_size;
+        $('#monthly-opex').val( monthlyOPEX )
+      }else{
+        $('#capex-total').val('')
+      }
+
+      
+
+    }
+
+    $(document).ready( () => {
+      generate_capex()
+      $('.user-input-data').on('change', () => {
+        generate_capex()
+      })
+      $('.user-input-data').on('input', () => {
+        generate_capex()
+      })
+
+    })
+
+
+
     am4core.ready(function () {
 
       // Themes begin
