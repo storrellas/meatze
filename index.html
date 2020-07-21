@@ -304,9 +304,9 @@
       meatze.set_input(input.project_size, input.electricity_cost, input.annual_operation_hours)
 
       $(".alert-pbp ").addClass('invisible')
-      const capex = meatze.generate_total_capex()
-      const opex_monthly = meatze.generate_monthly_opex();
-      const pbp = meatze.generate_pbp(market_price_usd, hash_rate, opex_monthly, capex.project)
+      const capex = meatze.generate_capex()
+      const opex_monthly = meatze.generate_opex();
+      const pbp = meatze.generate_pbp(market_price_usd, hash_rate)
 
       // Set Results
       // ------------

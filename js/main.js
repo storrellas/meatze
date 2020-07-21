@@ -45,10 +45,12 @@ class MeatzeFigures {
     this.annual_operation_hours = annual_operation_hours;
   }
 
-  generate_total_capex(){
+  set_btc_input( ){
 
-    console.log( this.project_size, this.electricity_cost, this.annual_operation_hours)
-  
+  }
+
+  generate_capex() {
+
     // CAPEX Server
     const server = SERVER_TYPE_LIST[this.server_type];
     const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
@@ -63,23 +65,20 @@ class MeatzeFigures {
     return this.capex
   }
   
-  generate_monthly_opex(){
+  generate_opex() {
   
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
       this.project_size.length == 0){
-      this.monthly_opex = 0;
+      this.opex_monthly = 0;
     }else{
-      this.monthly_opex = this.electricity_cost * 24 * 30 * 100 * this.project_size;
+      this.opex_monthly = this.electricity_cost * 24 * 30 * 100 * this.project_size;
     }
-    return this.monthly_opex;
+    return this.opex_monthly;
   }
   
-  generate_pbp(market_price_usd, hash_rate, opex_monthly, capex_project){
-  
-    // Grab inputs
-    const input = get_input()
-  
+  generate_pbp(market_price_usd, hash_rate){
+    
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
@@ -103,8 +102,8 @@ class MeatzeFigures {
                                           ( this.annual_operation_hours / yearly_hours); // [BTC]
   
     const monthly_project_income = monthly_project_income_btc * market_price_usd;
-    const monthly_project_profit = monthly_project_income - opex_monthly;
-    this.pbp = capex_project / monthly_project_profit;
+    const monthly_project_profit = monthly_project_income - this.opex_monthly;
+    this.pbp = this.capex.project / monthly_project_profit;
     return this.pbp;
   }
   
