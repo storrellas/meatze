@@ -48,11 +48,19 @@
             </div>
             <hr>
             <div class="row text-center mt-3">
-                <div class="col-md-6 ">
+                <div class="col-md-12">
+                    <textarea class="textarea-config" style="width: 100%; font-family: consolas" rows="10"></textarea>
+                </div>
+            </div>
+            <div class="row text-center mt-3">
+                <div class="col-md-4">
                     <button type="button" class="btn btn-reset btn-secondary">Reset Configuration</button>
                 </div>
-                <div class="col-md-6 ">
-                    <button type="button" class="btn btn-load btn-secondary">Load Configuration</button>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-set btn-secondary">Set Configuration</button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-refresh btn-secondary">Refresh Configuration</button>
                 </div>
             </div>
         </section>
@@ -95,52 +103,47 @@
 
         const collection_name = "config"
         function reset_configuration(server_type, configuration) {
-            console.log("Delete document ", collection_name, server_type, configuration)
-            /*
-            Promise.resolve( () => {
-                return db.collection(collection_name).doc(server_type).delete()
-            })
-            .then( () => {
-                console.log("document deleted", server_type)
-                //return db.collection(collection_name).doc(server_type).set(configuration)    
-            })
-            // .then( () => {
-            //     return db.collection(collection_name).doc(server_type).set(configuration)
-            // })
-            // .then( (docRef) => {
-            //     console.log("Already exists", docRef)
-            //     console.log("Document written with ID: ", docRef.id);
-            //     return
-            // })
-            /**/
-
-
-            /*
-            console.log("Setting for ", server_type, configuration)
-            db.collection(collection_name).doc(server_type).set(configuration)
-                .then(function (docRef) {
-                    console.log("Already exists")
-                    console.log("Already exists", docRef)
-                    console.log("Document written with ID: ", docRef.id);
-                })
-                .catch(function (error) {
-                    console.error("Error adding document: ", error);
-                });
-            /**/
+            for (const item in SERVER_TYPE_LIST) {
+                console.log("Reset Configuration -> ", collection_name, server_type, configuration)
+                db.collection(collection_name).doc(server_type).delete()
+                    .then(function() {
+                        console.log("Document successfully deleted!");
+                    }).catch(function(error) {
+                        console.error("Error removing document: ", error);
+                    });
+            }
         }
 
 
+        function set_configuration(server_type, configuration){
+            for (const item in SERVER_TYPE_LIST) {
+                console.log("Setting Configuration -> ", collection_name, server_type, configuration)                
+                db.collection(collection_name).doc(server_type).set(configuration)
+                    .then(function (docRef) {
+                        console.log("Already exists")
+                        console.log("Already exists", docRef)
+                    })
+                    .catch(function (error) {
+                        console.error("Error adding document: ", error);
+                    });
+            }
+        }
         
 
+        function refresh_configuration() {
+            let textArea = {}
+            db.collection( collection_name ).get().then(function(querySnapshot) {
+                querySnapshot.forEach(function(doc) {
+                    // doc.data() is never undefined for query doc snapshots
+                    textArea[doc.id] = doc.data()
+                    $('.textarea-config').val(JSON.stringify(textArea, null, 4))
+                });
+            });
 
-        // db.add({
-        //   'param1': 'sergi',
-        //   'param2': 'param'
-        // })
-
-
+        }
+ 
         const SERVER_TYPE_LIST = {
-            S17: { price: 1440, hashing: 70, consumption: 2.8 },
+            S17: { price: 2000, hashing: 70, consumption: 2.8 },
             T17: { price: 960, hashing: 58, consumption: 2.9 },
             S9: { price: 53.5, hashing: 10, consumption: 0.72 },
             S19: { price: 2160, hashing: 95, consumption: 3.3 },
@@ -148,57 +151,28 @@
             M31s: { price: 1320, hashing: 76, consumption: 3.2 },
             M30sPlus: { price: 2760, hashing: 100, consumption: 3.4 }
         }
- 
+
         $(document).ready( () => {
+
+            // Load Configuration
+            load_configuration()
+
+            // Btn Click
             $('.btn-reset').click( () => {
-                console.log("Resetting values")
+                reset_configuration()
+            })
 
-                for (const item in SERVER_TYPE_LIST) {
-                    // console.log(item)
-                    // console.log( SERVER_TYPE_LIST[item] )
-                    reset_configuration(item, SERVER_TYPE_LIST[item])
-                }
+            $('.btn-set').click( () => {                
+                set_configuration()                
+            })
 
+            $('.btn-refresh').click( () => {
+                refresh_configuration()
             })
         })
 
-        console.log(defaultProject.name);  // "[DEFAULT]"
-
-        // // Option 1: Access Firebase services via the defaultProject variable
-        // var defaultStorage = defaultProject.storage();
-        // var defaultFirestore = defaultProject.firestore();
-
-        // // Option 2: Access Firebase services using shorthand notation
-        // defaultStorage = firebase.storage();
-        // defaultFirestore = firebase.firestore();
 
 
-
-    //reset_configuration("S17", )
-        /*
-        db.collection("config").doc("S17").set({
-            price: 1440, hashing: 70,  consumption: 2.8
-        })
-        .then(function(docRef) {
-            console.log("Already exists")
-            console.log("Already exists", docRef)
-            console.log("Document written with ID: ", docRef.id);
-        })
-        .catch(function(error) {
-            console.error("Error adding document: ", error);
-        });
-
-        db.collection("config").doc("T17").set({
-            price: 960,  hashing: 58,  consumption: 2.9
-        })
-        .then(function(docRef) {
-            console.log("Already exists", docRef)
-            console.log("Document written with ID: ", docRef.id);
-        })
-        .catch(function(error) {
-            console.error("Error adding document: ", error);
-        });
-        /**/
     </script>
 
 </body>
