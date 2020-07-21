@@ -26,7 +26,7 @@ class MeatzeFigures {
     // Input parameters
     this.project_size = 0;
     this.electricity_cost = 0;
-    this.annual_operation_hours = 0;
+    this.yearly_operation_hours = 0;
 
     // Output parameters
     this.capex = {};
@@ -39,22 +39,19 @@ class MeatzeFigures {
     this.container_type = container_type;
   }
 
-  set_input(project_size, electricity_cost, annual_operation_hours){
+  set_input(project_size, electricity_cost, yearly_operation_hours){
     this.project_size = project_size;
     this.electricity_cost = electricity_cost;
-    this.annual_operation_hours = annual_operation_hours;
+    this.yearly_operation_hours = yearly_operation_hours;
   }
 
-  set_btc_input( ){
-
-  }
 
   generate_capex() {
 
     // CAPEX Server
     const server = SERVER_TYPE_LIST[this.server_type];
     const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
-    const capex_server = ( (1000 / server.consumption) * factor  ) * server.price
+    const capex_server = ( 1000 / (server.consumption * factor)  ) * server.price
   
     // CAPEX Project
     let capex_project = (capex_server + CAPEX_CONTAINER[this.container_type]) * this.project_size
@@ -72,7 +69,9 @@ class MeatzeFigures {
       this.project_size.length == 0){
       this.opex_monthly = 0;
     }else{
-      this.opex_monthly = this.electricity_cost * 24 * 30 * 100 * this.project_size;
+      const year_hours = 8760; // hours in a year
+      const factor_operation_hours = this.yearly_operation_hours / year_hours
+      this.opex_monthly = this.electricity_cost * 24 * 30 * 1000 * this.project_size * factor_operation_hours;
     }
     return this.opex_monthly;
   }
@@ -96,10 +95,10 @@ class MeatzeFigures {
   
     // Calculate PBP
     const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
-    const yearly_hours = 8760; // hours in a year
+    const year_hours = 8760; // hours in a year
     const monthly_project_income_btc = (project_hashpower / hash_rate) * 
                                           montly_btc_issued * 
-                                          ( this.annual_operation_hours / yearly_hours); // [BTC]
+                                          ( this.yearly_operation_hours / year_hours); // [BTC]
   
     const monthly_project_income = monthly_project_income_btc * market_price_usd;
     const monthly_project_profit = monthly_project_income - this.opex_monthly;

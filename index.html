@@ -26,43 +26,28 @@
 
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
-            Dropdown
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Something else here</a>
-          </div>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#">Disabled</a>
-        </li>
-      </ul>
-      <form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-      </form>
-    </div>
-  </nav>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/config.html">Config</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
 
 
   <div class="container">
@@ -96,8 +81,8 @@
         <div class="col-md-4 input-group mb-3">
     
           <div class="input-group">
-            <input type="text" class="form-control user-input-data" id="annual-hours" placeholder="Annual hours of operation"
-              aria-label="Annual hours of operation" aria-describedby="basic-addon2">
+            <input type="text" class="form-control user-input-data" id="yearly-hours" placeholder="Yearly hours of operation"
+              aria-label="Yearly hours of operation" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">hours</span>
             </div>
@@ -145,8 +130,8 @@
                     <div class="input-group-prepend">
                       <label class="input-group-text" for="inputGroupSelect01">Market Price USD</label>
                     </div>
-                    <input type="text" readonly class="form-control user-input-data" id="market-price-usd" placeholder="Annual hours of operation"
-                        aria-label="Annual hours of operation" aria-describedby="basic-addon2">
+                    <input type="text" readonly class="form-control user-input-data" id="market-price-usd" placeholder="Market Price USD"
+                        aria-label="Market Price USD" aria-describedby="basic-addon2">
                   </div>
               <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
             </div>
@@ -156,8 +141,8 @@
                     <div class="input-group-prepend">
                       <label class="input-group-text" for="inputGroupSelect01">Hash Rate</label>
                     </div>
-                    <input type="text" readonly class="form-control user-input-data" id="hash-rate" placeholder="Annual hours of operation"
-                      aria-label="Annual hours of operation" aria-describedby="basic-addon2">
+                    <input type="text" readonly class="form-control user-input-data" id="hash-rate" placeholder="Hash Rate"
+                      aria-label="Hash Rate" aria-describedby="basic-addon2">
                   </div>
               <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
             </div>
@@ -294,7 +279,7 @@
       return { 
         project_size : $('#project-size').val(), 
         electricity_cost: $('#electricity-cost').val(), 
-        annual_operation_hours: $('#annual-hours').val()
+        yearly_operation_hours: $('#yearly-hours').val()
       }
     }
 
@@ -309,7 +294,7 @@
 
       // Grab inputs
       const input = get_input()
-      meatze.set_input(input.project_size, input.electricity_cost, input.annual_operation_hours)
+      meatze.set_input(input.project_size, input.electricity_cost, input.yearly_operation_hours)
 
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze.generate_capex()
