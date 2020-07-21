@@ -96,7 +96,7 @@
         <div class="col-md-4 input-group mb-3">
     
           <div class="input-group">
-            <input type="text" class="form-control user-input-data" placeholder="Annual hours of operation"
+            <input type="text" class="form-control user-input-data" id="annual-hours" placeholder="Annual hours of operation"
               aria-label="Annual hours of operation" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">hours</span>
@@ -167,9 +167,11 @@
           </div>
           <div class="form-group">
               <label for="exampleInputEmail1">Expected PBP</label>
-              <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              <input readonly type="text" class="form-control" id="pbp" aria-describedby="emailHelp"
                 placeholder="Expected PBP">
+              <div class="alert alert-pbp alert-danger invisible" role="alert">Configuration non-profitable</div>
           </div>
+
 
           <!-- <div class="form-group" style="margin-top: 50px">
             <label for="exampleInputEmail1">Miner Model</label>
@@ -253,7 +255,8 @@
   <script src="https://www.amcharts.com/lib/4/charts.js"></script>
   <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
-  <!-- Chart code -->
+  <script src="/js/main.js"></script>
+
   <script type="text/javascript">
 
     const SERVER_TYPE_LIST = {
@@ -275,50 +278,50 @@
       LiquidCooled: 1.3
     }
 
-    function generate_capex(){
+    // Retrieved blockchain
+    let market_price_usd = undefined;
+    let hash_rate = undefined;
 
-      const server_type = $('#server-type').val()
-      const container_type = $('#container-type').val()
-
-      const project_size = $('#project-size').val()
-      const electricity_cost = $('#electricity-cost').val()
-
-      // CAPEX Server
-      const CAPEXServer = ( 1000 / (SERVER_TYPE_LIST[server_type].consumption * CAPEX_CONTAINER_FACTOR[container_type] ) ) * SERVER_TYPE_LIST[server_type].price
-      const CAPEXServerRound = Math.round(CAPEXServer * 100) / 100
-      $('#capex-server').val(CAPEXServerRound)
-
-      // CAPEX Project
-      if( project_size.length > 0){
-        const CAPEXProject = (CAPEXServer + CAPEX_CONTAINER[container_type]) * project_size
-        const CAPEXProjectRound = Math.round(CAPEXProject * 100) / 100
-        $('#capex-total').val(CAPEXProjectRound)
-      }else{
-        $('#capex-total').val('')
+    function get_input(){
+      return { 
+        project_size : $('#project-size').val(), 
+        electricity_cost: $('#electricity-cost').val(), 
+        annual_operation_hours: $('#annual-hours').val()
       }
+    }
 
 
-      // Monthly OPEX
-      if( electricity_cost.length > 0 && project_size.length > 0){
-        const monthlyOPEX = electricity_cost * 24 * 30 * 100 * project_size;
-        $('#monthly-opex').val( monthlyOPEX )
-      }else{
-        $('#capex-total').val('')
-      }
+    function generate_figures(){
+      $(".alert-pbp ").addClass('invisible')
+      const capex = generate_total_capex()
+      const opex_monthly = generate_monthly_opex();
+      const pbp = generate_pbp(market_price_usd, hash_rate, opex_monthly, capex.project)
 
-      
+      // Capex Total
+      const capex_project_round = Math.round(capex.project * 100) / 100
+      $('#capex-server').val(capex.server)
+      $('#capex-total').val(capex_project_round)
 
+      // Montly OPEX
+      $('#monthly-opex').val( opex_monthly>0?opex_monthly:'' )
+
+      // Expected PBP
+      if( pbp < 0 )
+        $(".alert-pbp ").removeClass('invisible')
+      $('#pbp').val(pbp)
     }
 
     $(document).ready( () => {
-      generate_capex()
-      $('.user-input-data').on('change', () => {
-        generate_capex()
-      })
-      $('.user-input-data').on('input', () => {
-        generate_capex()
-      })
+      
+      generate_figures()
+      $('.user-input-data').on('change', () => generate_figures() )
+      $('.user-input-data').on('input', () => generate_figures())
 
+      // Retreive data from blockchain
+      axios.get('https://api.blockchain.info/stats') .then( (response) => {
+        market_price_usd = response.data.market_price_usd;
+        hash_rate = response.data.hash_rate;
+      })
     })
 
 
