@@ -327,7 +327,7 @@
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {
         market_price_usd = response.data.market_price_usd;
-        hash_rate = response.data.hash_rate;
+        hash_rate = response.data.hash_rate / 1000;
         $('#market-price-usd').val(market_price_usd)
         $('#hash-rate').val(hash_rate)
       })
