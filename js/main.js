@@ -81,7 +81,7 @@ class MeatzeFigures {
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
-        this.annual_operation_hours.length == 0) {
+        this.yearly_operation_hours.length == 0) {
       this.pbp = 0;
       return this.pbp;
     }

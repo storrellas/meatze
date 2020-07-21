@@ -47,7 +47,7 @@
                 <h4>Estimator Configuration</h4>
             </div>
             <hr>
-            <div class="row mt-3">
+            <div class="row text-center mt-3">
                 <div class="col-md-6 ">
                     <button type="button" class="btn btn-reset btn-secondary">Reset Configuration</button>
                 </div>
@@ -138,13 +138,6 @@
         //   'param2': 'param'
         // })
 
-        // S17  :  { price: 1440, hashing: 70,  consumption: 2.8 },
-        //   T17  :  { price: 960,  hashing: 58,  consumption: 2.9 },
-        //   S9   :  { price: 53.5, hashing: 10,  consumption: 0.72 },
-        //   S19  :  { price: 2160, hashing: 95,  consumption: 3.3 },
-        //   M20s :  { price: 900,  hashing: 68,  consumption: 3.3 },
-        //   M31s :  { price: 1320, hashing: 76,  consumption: 3.2 },
-        //   M30sPlus :  { price: 2760, hashing: 100, consumption: 3.4 }
 
         const SERVER_TYPE_LIST = {
             S17: { price: 1440, hashing: 70, consumption: 2.8 },
@@ -158,7 +151,7 @@
  
         $(document).ready( () => {
             $('.btn-reset').click( () => {
-                console.log("REsetringds")
+                console.log("Resetting values")
 
                 for (const item in SERVER_TYPE_LIST) {
                     // console.log(item)
