@@ -19,89 +19,95 @@ const CAPEX_CONTAINER_FACTOR = {
 
 
 class MeatzeFigures {
-  constructor(server_type, container_type) {
+  constructor() {
+    this.server_type = 0;
+    this.container_type = 0;
+
+    // Input parameters
+    this.project_size = 0;
+    this.electricity_cost = 0;
+    this.annual_operation_hours = 0;
+
+    // Output parameters
+    this.capex = {};
+    this.opex_monthly = 0;
+    this.pbp = 0;
+  }
+
+  set_configuration(server_type, container_type){
     this.server_type = server_type;
     this.container_type = container_type;
   }
 
+  set_input(project_size, electricity_cost, annual_operation_hours){
+    this.project_size = project_size;
+    this.electricity_cost = electricity_cost;
+    this.annual_operation_hours = annual_operation_hours;
+  }
 
+  generate_total_capex(){
 
+    console.log( this.project_size, this.electricity_cost, this.annual_operation_hours)
+  
+    // CAPEX Server
+    const server = SERVER_TYPE_LIST[this.server_type];
+    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
+    const capex_server = ( (1000 / server.consumption) * factor  ) * server.price
+  
+    // CAPEX Project
+    let capex_project = (capex_server + CAPEX_CONTAINER[this.container_type]) * this.project_size
+    if( this.project_size.length == 0){
+      capex_project = 0;
+    }
+    this.capex = { server: capex_server, project: capex_project }
+    return this.capex
+  }
+  
+  generate_monthly_opex(){
+  
+    // Monthly OPEX
+    if( this.electricity_cost.length == 0 || 
+      this.project_size.length == 0){
+      this.monthly_opex = 0;
+    }else{
+      this.monthly_opex = this.electricity_cost * 24 * 30 * 100 * this.project_size;
+    }
+    return this.monthly_opex;
+  }
+  
+  generate_pbp(market_price_usd, hash_rate, opex_monthly, capex_project){
+  
+    // Grab inputs
+    const input = get_input()
+  
+    // Monthly OPEX
+    if( this.electricity_cost.length == 0 || 
+        this.project_size.length == 0 ||
+        this.annual_operation_hours.length == 0) {
+      this.pbp = 0;
+      return this.pbp;
+    }
+  
+    // Project Hashpower
+    const server = SERVER_TYPE_LIST[this.server_type];
+    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
+    const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
+  
+    // market_price_usd / hash_rate
+  
+    // Calculate PBP
+    const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
+    const yearly_hours = 8760; // hours in a year
+    const monthly_project_income_btc = (project_hashpower / hash_rate) * 
+                                          montly_btc_issued * 
+                                          ( this.annual_operation_hours / yearly_hours); // [BTC]
+  
+    const monthly_project_income = monthly_project_income_btc * market_price_usd;
+    const monthly_project_profit = monthly_project_income - opex_monthly;
+    this.pbp = capex_project / monthly_project_profit;
+    return this.pbp;
+  }
+  
 
   
-}
-
-
-function generate_total_capex(){
-
-  const server_type = $('#server-type').val()
-  const container_type = $('#container-type').val()
-
-  // Grab inputs
-  const input = get_input()
-  
-
-  // CAPEX Server
-  const server = SERVER_TYPE_LIST[server_type];
-  const factor = CAPEX_CONTAINER_FACTOR[container_type];
-  const capex_server = ( (1000 / server.consumption) * factor  ) * server.price
-
-  // CAPEX Project
-  let capex_project = (capex_server + CAPEX_CONTAINER[container_type]) * input.project_size
-  if( input.project_size.length == 0){
-    capex_project = 0;
-  }
-  return { server: capex_server, project: capex_project }
-}
-
-function generate_monthly_opex(){
-
-  // Grab inputs
-  const input = get_input()
-
-  // Monthly OPEX
-  if( input.electricity_cost.length == 0 || 
-      input.project_size.length == 0){
-    return 0;
-  }
-
-  const monthly_opex = input.electricity_cost * 24 * 30 * 100 * input.project_size;
-
-
-  return monthly_opex;
-}
-
-function generate_pbp(market_price_usd, hash_rate, opex_monthly, capex_project){
-  const server_type = $('#server-type').val()
-  const container_type = $('#container-type').val()
-
-  // Grab inputs
-  const input = get_input()
-
-  // Monthly OPEX
-  if( input.electricity_cost.length == 0 || 
-      input.project_size.length == 0 ||
-      input.annual_operation_hours.length == 0){
-    return 0
-  }
-
-  // Project Hashpower
-  const server = SERVER_TYPE_LIST[server_type];
-  const factor = CAPEX_CONTAINER_FACTOR[container_type];
-  const project_hashpower = ( (1000.0 / server.consumption) * factor) * input.project_size * server.hashing;
-
-  // market_price_usd / hash_rate
-
-  // Calculate PBP
-  const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
-  const yearly_hours = 8760; // hours in a year
-  const monthly_project_income_btc = (project_hashpower / hash_rate) * 
-                                        montly_btc_issued * 
-                                        ( input.annual_operation_hours / yearly_hours); // [BTC]
-
-  const monthly_project_income = monthly_project_income_btc * market_price_usd;
-  const monthly_project_profit = monthly_project_income - opex_monthly;
-  const pbp = capex_project / monthly_project_profit;
-
-
-  return pbp;
 }
