@@ -102,23 +102,41 @@
         const db = firebase.firestore();
 
         const collection_name = "config"
-        function reset_configuration(server_type, configuration) {
-            for (const item in SERVER_TYPE_LIST) {
-                console.log("Reset Configuration -> ", collection_name, server_type, configuration)
-                db.collection(collection_name).doc(server_type).delete()
-                    .then(function() {
-                        console.log("Document successfully deleted!");
-                    }).catch(function(error) {
-                        console.error("Error removing document: ", error);
-                    });
+        function reset_configuration() {
+            for (const item in SERVER_TYPE_LIST_DEFAULT) {
+                console.log("Reset Configuration -> ", collection_name, item)
+                Promise.resolve()
+                .then( () => {
+                    console.log("Finishing set delete")
+                    return db.collection(collection_name).doc(item).delete()
+                })
+                .then( () => {
+                    console.log("Finishing set configuration")
+                    return db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST_DEFAULT[item])
+                })
+                .then( () => {
+                    console.log("Finishing set configuration")
+                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                })
+
+
+
+
+                // db.collection(collection_name).doc(item).delete()
+                //     .then(function() {
+                //         console.log("Document successfully deleted!");
+                //     }).catch(function(error) {
+                //         console.error("Error removing document: ", error);
+                //     });
             }
         }
 
 
-        function set_configuration(server_type, configuration){
+        function set_configuration(){
+            SERVER_TYPE_LIST = JSON.parse( $('.textarea-config').val() )
             for (const item in SERVER_TYPE_LIST) {
-                console.log("Setting Configuration -> ", collection_name, server_type, configuration)                
-                db.collection(collection_name).doc(server_type).set(configuration)
+                //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
+                db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST[item])
                     .then(function (docRef) {
                         console.log("Already exists")
                         console.log("Already exists", docRef)
@@ -131,18 +149,18 @@
         
 
         function refresh_configuration() {
-            let textArea = {}
+            SERVER_TYPE_LIST = {}
             db.collection( collection_name ).get().then(function(querySnapshot) {
                 querySnapshot.forEach(function(doc) {
                     // doc.data() is never undefined for query doc snapshots
-                    textArea[doc.id] = doc.data()
-                    $('.textarea-config').val(JSON.stringify(textArea, null, 4))
+                    SERVER_TYPE_LIST[doc.id] = doc.data()
                 });
+                $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST, null, 4))
             });
 
         }
  
-        const SERVER_TYPE_LIST = {
+        const SERVER_TYPE_LIST_DEFAULT = {
             S17: { price: 2000, hashing: 70, consumption: 2.8 },
             T17: { price: 960, hashing: 58, consumption: 2.9 },
             S9: { price: 53.5, hashing: 10, consumption: 0.72 },
@@ -151,24 +169,18 @@
             M31s: { price: 1320, hashing: 76, consumption: 3.2 },
             M30sPlus: { price: 2760, hashing: 100, consumption: 3.4 }
         }
+        let SERVER_TYPE_LIST = Object.assign({}, SERVER_TYPE_LIST_DEFAULT)
+
 
         $(document).ready( () => {
 
             // Load Configuration
-            load_configuration()
+            refresh_configuration()
 
             // Btn Click
-            $('.btn-reset').click( () => {
-                reset_configuration()
-            })
-
-            $('.btn-set').click( () => {                
-                set_configuration()                
-            })
-
-            $('.btn-refresh').click( () => {
-                refresh_configuration()
-            })
+            $('.btn-reset').click( () => reset_configuration() )
+            $('.btn-set').click( () => set_configuration() )
+            $('.btn-refresh').click( () => refresh_configuration() )
         })
 
 
