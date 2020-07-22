@@ -96,15 +96,7 @@
                   <div class="input-group-prepend">
                     <label class="input-group-text" for="inputGroupSelect01">Server Type</label>
                   </div>
-                  <select class="custom-select user-input-data" id="server-type">
-                    <option>S17</option>
-                    <option>T17</option>
-                    <option>S9</option>
-                    <option>S19</option>
-                    <option>M20s</option>
-                    <option>M31s</option>
-                    <option>M30s+</option>
-                  </select>
+                  <select class="custom-select config-input-data" id="server-type"></select>
                 </div>
             <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
           </div>
@@ -114,10 +106,7 @@
                   <div class="input-group-prepend">
                     <label class="input-group-text" for="inputGroupSelect01">Container Type</label>
                   </div>
-                  <select class="custom-select user-input-data" id="container-type">
-                    <option>AirCooled</option>
-                    <option>LiquidCooled</option>
-                  </select>
+                  <select class="custom-select config-input-data" id="container-type"></select>
                 </div>
             <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
           </div>
@@ -158,7 +147,7 @@
       </div>
       <hr>
       <div class="row mt-3 col-md-12">
-          <div class="alert alert-primary text-center" role="alert" style="width: 100%">
+          <div class="alert alert-primary alert-optimal text-center" role="alert" style="width: 100%">
               Calculating <i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
           </div>
       </div>
@@ -326,39 +315,88 @@
       $('#pbp').val(pbp)
     }
 
-    const update_output = (server_type, container_type) => {
-      const output = generate_figures(server_type, container_type)
-      set_output( output.capex_server, output.capex_project, 
-                  output.opex_monthly, output.pbp)
+    const fill_configurations = () => {
+      $("#server-type").empty()
+      for(const server in SERVER_TYPE_LIST ){ // Iterate on servers
+        $("#server-type").append(new Option(server, server));
+      }
+      $("#container-type").empty()
+      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+        $("#container-type").append(new Option(container, container));
+      }
     }
 
-    let configuration_assesment_list = []
-    $(document).ready( () => {
+    const find_optimal_config = () => {
       
-      const server_type = $('#server-type').val()
-      const container_type = $('#container-type').val()
-
-      // Iterate configurations
-      configuration_assesment_list = []
+      // Iterate configurations and find optimal
+      let optimal_pbp = undefined;
+      let optimal_config = undefined;
+      config_list = []
       for(const container in CAPEX_CONTAINER ){ // Iterate on containers
 
         for(const server in SERVER_TYPE_LIST ){ // Iterate on servers
           output = generate_figures(server, container)
-          const configuration_assesment = {
-            server_type: server_type, container_type: container_type, ...output
+          const config = {
+            server: server, container: container, ...output
           }
-          configuration_assesment_list.push(configuration_assesment)
+
+          // Grab lowest PBP
+          if( optimal_pbp === undefined ){
+            optimal_pbp = output.pbp;
+            optimal_config = Object.assign({}, config)
+          }else{
+            if( optimal_pbp > output.pbp ){
+              optimal_pbp = output.pbp;
+              optimal_config = Object.assign({}, config)
+            }
+          }
+          config_list.push(config)
         }
-
-
       }
 
+      return optimal_config;
+    }
 
+    const calculate_output_figures = (server_type, container_type) => {
+      const optimal_config = find_optimal_config()
+
+      const optimal_text = `Optimal Configuration: SERVER=${optimal_config.server} / CONTAINER=${optimal_config.container}`
+      $('.alert-optimal').text(optimal_text)
+
+      // Set configuration
+      $('#server-type').val( optimal_config.server )
+      $('#container-type').val( optimal_config.container )
+
+      // Set output
+      set_output( optimal_config.capex_server, optimal_config.capex_project, 
+                optimal_config.opex_monthly, optimal_config.pbp)
+    }
+
+    const set_output_figures = () => {
+
+      // Set configuration
+      const server_type = $('#server-type').val()
+      const container_type = $('#container-type').val()
+
+      const selected_config = config_list.filter( obj => 
+          (obj.server === server_type && obj.container === container_type))[0]
+
+      // Set output
+      set_output( selected_config.capex_server, selected_config.capex_project, 
+                  selected_config.opex_monthly, selected_config.pbp)
+    }
+
+    let config_list = []
+    $(document).ready( () => {
+      
+      // Fill server and container
+      fill_configurations();
 
       // Genearte configuration
-      update_output(server_type, container_type)
-      $('.user-input-data').on('change', () => update_output(server_type, container_type) )
-      $('.user-input-data').on('input', () => update_output(server_type, container_type) )
+      calculate_output_figures()
+      
+      $('.user-input-data').on('input', () => calculate_output_figures() )
+      $('.config-input-data').on('change', () => set_output_figures() )
 
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {
