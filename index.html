@@ -310,9 +310,12 @@
       $('#opex-monthly').val( opex_monthly>0?opex_monthly:'' )
 
       // Expected PBP
-      if( pbp < 0 )
+      if( pbp < 0 ){
         $(".alert-pbp ").removeClass('invisible')
-      $('#pbp').val(pbp)
+        $('#pbp').val('')
+      }else{
+        $('#pbp').val(pbp)
+      }
     }
 
     const fill_configurations = () => {
@@ -345,7 +348,7 @@
             optimal_pbp = output.pbp;
             optimal_config = Object.assign({}, config)
           }else{
-            if( optimal_pbp > output.pbp ){
+            if( optimal_pbp > output.pbp && output.pbp >= 0){
               optimal_pbp = output.pbp;
               optimal_config = Object.assign({}, config)
             }
