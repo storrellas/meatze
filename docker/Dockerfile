@@ -1,6 +1,5 @@
 #Grab the latest alpine image
 FROM nginx:1.15
-COPY ./ /usr/share/nginx/html
 
 # Change permissions
 RUN chmod -R 755 /usr/share/nginx/html/
@@ -9,3 +8,6 @@ RUN chmod -R 755 /usr/share/nginx/html/
 RUN apt update
 RUN apt -y install apache2-utils
 RUN htpasswd -b -c /etc/nginx/.htpasswd admin Admin123
+
+# Copy static
+COPY ./ /usr/share/nginx/html
