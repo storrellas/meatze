@@ -8,6 +8,8 @@ const SERVER_TYPE_LIST = {
   M30sPlus :  { price: 2760, hashing: 100, consumption: 3.4 }
 }
 
+
+
 const CAPEX_CONTAINER = {
   AirCooled: 30000,
   LiquidCooled: 100000

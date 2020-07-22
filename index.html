@@ -157,6 +157,13 @@
         <h4>Project Estimate</h4>
       </div>
       <hr>
+      <div class="row mt-3 col-md-12">
+          <div class="alert alert-primary text-center" role="alert" style="width: 100%">
+              Calculating <i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
+          </div>
+      </div>
+      
+
       <div class="row mt-3">
 
         <div class="col-md-4">
@@ -173,7 +180,7 @@
           </div>
           <div class="form-group">
             <label for="exampleInputEmail1">Monthly OPEX</label>
-            <input readonly type="text" class="form-control" id="monthly-opex" aria-describedby="emailHelp"
+            <input readonly type="text" class="form-control" id="opex-monthly" aria-describedby="emailHelp"
               placeholder="Monthly OPEX">
           </div>
           <div class="form-group">
@@ -275,7 +282,7 @@
     let market_price_usd = undefined;
     let hash_rate = undefined;
 
-    function get_input(){
+    const get_input = () => {
       return { 
         project_size : $('#project-size').val(), 
         electricity_cost: $('#electricity-cost').val(), 
@@ -284,12 +291,10 @@
     }
 
 
-    function generate_figures() {
+    const generate_figures = (server_type, container_type) => {
       const meatze = new MeatzeFigures()
 
       // Set Configuration
-      const server_type = $('#server-type').val()
-      const container_type = $('#container-type').val()
       meatze.set_configuration(server_type, container_type)
 
       // Grab inputs
@@ -301,16 +306,19 @@
       const opex_monthly = meatze.generate_opex();
       const pbp = meatze.generate_pbp(market_price_usd, hash_rate)
 
-      // Set Results
-      // ------------
+      return { capex_server: capex.server, capex_project: capex.project, 
+              opex_monthly: opex_monthly, pbp: pbp }
+    }
 
-      // Capex Total
-      const capex_project_round = Math.round(capex.project * 100) / 100
-      $('#capex-server').val(capex.server)
+    const set_output = (capex_server, capex_project, opex_monthly, pbp) => {
+
+      // Capex Project
+      $('#capex-server').val(capex_server)
+      const capex_project_round = Math.round(capex_project * 100) / 100
       $('#capex-total').val(capex_project_round)
 
       // Montly OPEX
-      $('#monthly-opex').val( opex_monthly>0?opex_monthly:'' )
+      $('#opex-monthly').val( opex_monthly>0?opex_monthly:'' )
 
       // Expected PBP
       if( pbp < 0 )
@@ -318,11 +326,39 @@
       $('#pbp').val(pbp)
     }
 
+    const update_output = (server_type, container_type) => {
+      const output = generate_figures(server_type, container_type)
+      set_output( output.capex_server, output.capex_project, 
+                  output.opex_monthly, output.pbp)
+    }
+
+    let configuration_assesment_list = []
     $(document).ready( () => {
       
-      generate_figures()
-      $('.user-input-data').on('change', () => generate_figures() )
-      $('.user-input-data').on('input', () => generate_figures())
+      const server_type = $('#server-type').val()
+      const container_type = $('#container-type').val()
+
+      // Iterate configurations
+      configuration_assesment_list = []
+      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+
+        for(const server in SERVER_TYPE_LIST ){ // Iterate on servers
+          output = generate_figures(server, container)
+          const configuration_assesment = {
+            server_type: server_type, container_type: container_type, ...output
+          }
+          configuration_assesment_list.push(configuration_assesment)
+        }
+
+
+      }
+
+
+
+      // Genearte configuration
+      update_output(server_type, container_type)
+      $('.user-input-data').on('change', () => update_output(server_type, container_type) )
+      $('.user-input-data').on('input', () => update_output(server_type, container_type) )
 
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {
