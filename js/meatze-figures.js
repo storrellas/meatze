@@ -1,15 +1,3 @@
-const SERVER_TYPE_LIST = {
-  S17  :  { price: 1440, hashing: 70,  consumption: 2.8 },
-  T17  :  { price: 960,  hashing: 58,  consumption: 2.9 },
-  S9   :  { price: 53.5, hashing: 10,  consumption: 0.72 },
-  S19  :  { price: 2160, hashing: 95,  consumption: 3.3 },
-  M20s :  { price: 900,  hashing: 68,  consumption: 3.3 },
-  M31s :  { price: 1320, hashing: 76,  consumption: 3.2 },
-  M30sPlus :  { price: 2760, hashing: 100, consumption: 3.4 }
-}
-
-
-
 const CAPEX_CONTAINER = {
   AirCooled: 30000,
   LiquidCooled: 100000
@@ -21,7 +9,8 @@ const CAPEX_CONTAINER_FACTOR = {
 
 
 class MeatzeFigures {
-  constructor() {
+  constructor(server_type_list) {
+    this.server_type_list = server_type_list;
     this.server_type = 0;
     this.container_type = 0;
 
@@ -51,7 +40,7 @@ class MeatzeFigures {
   generate_capex() {
 
     // CAPEX Server
-    const server = SERVER_TYPE_LIST[this.server_type];
+    const server = this.server_type_list[this.server_type];
     const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
     const capex_server = ( 1000 / (server.consumption * factor)  ) * server.price
   
@@ -89,7 +78,7 @@ class MeatzeFigures {
     }
   
     // Project Hashpower
-    const server = SERVER_TYPE_LIST[this.server_type];
+    const server = this.server_type_list[this.server_type];
     const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
     const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
   

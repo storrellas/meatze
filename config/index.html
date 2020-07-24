@@ -80,7 +80,7 @@
     <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
     <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
 
-    <!-- Add Firebase products that you want to use -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
 
@@ -98,6 +98,7 @@
                 const result = await meatze_firebase.get();
                 $('.textarea-config').val(JSON.stringify(result, null, 4))
             }catch(e){
+                $('.textarea-config').val(JSON.stringify(e, null, 4))
                 console.log(e)
             }
         }
@@ -115,7 +116,8 @@
                 })
             })
             $('.btn-set').click( () => {
-                meatze_firebase.set() 
+                const server_type_list = JSON.parse( $('.textarea-config').val() )
+                meatze_firebase.set(server_type_list) 
             })
             $('.btn-refresh').click( () => {
                 meatze_firebase.get() 

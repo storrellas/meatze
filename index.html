@@ -148,7 +148,7 @@
       <hr>
       <div class="row mt-3 col-md-12">
           <div class="alert alert-primary alert-optimal text-center" role="alert" style="width: 100%">
-              Calculating <i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
+              <span>Initialising </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
           </div>
       </div>
       
@@ -262,7 +262,10 @@
   <script src="https://www.amcharts.com/lib/4/charts.js"></script>
   <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
-  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
 
   <!-- Project Scripts -->
   <script src="/js/meatze-figures.js"></script>
@@ -275,6 +278,9 @@
     let market_price_usd = undefined;
     let hash_rate = undefined;
 
+    // Meatze Firebase
+    const meatze_firebase = new MeatzeFirebase( "config" )
+
     const get_input = () => {
       return { 
         project_size : $('#project-size').val(), 
@@ -285,19 +291,19 @@
 
 
     const generate_figures = (server_type, container_type) => {
-      const meatze = new MeatzeFigures()
+      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
       // Set Configuration
-      meatze.set_configuration(server_type, container_type)
+      meatze_figures.set_configuration(server_type, container_type)
 
       // Grab inputs
       const input = get_input()
-      meatze.set_input(input.project_size, input.electricity_cost, input.yearly_operation_hours)
+      meatze_figures.set_input(input.project_size, input.electricity_cost, input.yearly_operation_hours)
 
       $(".alert-pbp ").addClass('invisible')
-      const capex = meatze.generate_capex()
-      const opex_monthly = meatze.generate_opex();
-      const pbp = meatze.generate_pbp(market_price_usd, hash_rate)
+      const capex = meatze_figures.generate_capex()
+      const opex_monthly = meatze_figures.generate_opex();
+      const pbp = meatze_figures.generate_pbp(market_price_usd, hash_rate)
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, pbp: pbp }
@@ -322,9 +328,13 @@
       }
     }
 
-    const fill_configurations = () => {
+    const fill_configurations = async () => {
+
+
+      const server_type_list = await meatze_firebase.get()              
+
       $("#server-type").empty()
-      for(const server in SERVER_TYPE_LIST ){ // Iterate on servers
+      for(const server in server_type_list ){ // Iterate on servers
         $("#server-type").append(new Option(server, server));
       }
       $("#container-type").empty()
@@ -361,6 +371,7 @@
         }
       }
 
+
       return optimal_config;
     }
 
@@ -393,14 +404,21 @@
                   selected_config.opex_monthly, selected_config.pbp)
     }
 
+    const initialise = async () => {
+
+      // Fill server and container
+      $('.alert-optimal span').text("Loading Firebase configuration "); 
+      await fill_configurations();
+
+      // Genearte configuration
+      $('.alert-optimal span').text("Calculating outputs ");
+      await calculate_output_figures();
+    }
+
     let config_list = []
     $(document).ready( () => {
       
-      // Fill server and container
-      fill_configurations();
-
-      // Genearte configuration
-      calculate_output_figures()
+      initialise()
       
       $('.user-input-data').on('input', () => calculate_output_figures() )
       $('.config-input-data').on('change', () => set_output_figures() )

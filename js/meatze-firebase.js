@@ -24,7 +24,7 @@ const SERVER_TYPE_LIST_DEFAULT = {
   S9: { price: 53.5, hashing: 10, consumption: 0.72 },
   S19: { price: 2160, hashing: 95, consumption: 3.3 },
 }
-let SERVER_TYPE_LIST = Object.assign({}, SERVER_TYPE_LIST_DEFAULT)
+//let SERVER_TYPE_LIST = Object.assign({}, SERVER_TYPE_LIST_DEFAULT)
 
 class MeatzeFirebase {
   constructor(collection_name) {
@@ -32,6 +32,7 @@ class MeatzeFirebase {
 
     this.email = 'sergi@meatze.com'
     this.password = 'meatze'
+    this.server_type_list = {};
   }
 
   authenticate(){
@@ -62,11 +63,11 @@ class MeatzeFirebase {
     return SERVER_TYPE_LIST_DEFAULT
   }
 
-  set() {
-    SERVER_TYPE_LIST = JSON.parse( $('.textarea-config').val() )
-    for (const item in SERVER_TYPE_LIST) {
+  set(server_type_list) {
+    this.server_type_list = server_type_list;
+    for (const item in server_type_list) {
         //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
-        db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST[item])
+        db.collection(collection_name).doc(item).set(server_type_list[item])
             .then(function (docRef) {
                 console.log("Set document ok")
             })
@@ -78,7 +79,6 @@ class MeatzeFirebase {
 
 
   async get() {
-    SERVER_TYPE_LIST = {}
     return new Promise( (resolve, reject) => {
       db.collection( collection_name )
         .orderBy(firebase.firestore.FieldPath.documentId()).get()
@@ -87,13 +87,14 @@ class MeatzeFirebase {
           // Set results                
           querySnapshot.forEach((doc) => {
               // doc.data() is never undefined for query doc snapshots
-              SERVER_TYPE_LIST[doc.id] = doc.data()
+              this.server_type_list[doc.id] = doc.data()
           });
-          return resolve(SERVER_TYPE_LIST)
+          return resolve(this.server_type_list)
 
         })
         .catch( (error) => {
-          return reject({error: 'Failed to load data'})
+          console.log("server_type_list ", this.server_type_list)
+          return reject({error: 'Failed to load data', message: error})
         })
     })
   }
