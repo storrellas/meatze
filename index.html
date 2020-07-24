@@ -339,9 +339,14 @@
         let i = 0;
         do{
           i++;
+          const date = new Date();  // 2009-11-10
+          date.setMonth( date.getMonth() + i );
+          const month = date.toLocaleString('en-US', { month: 'long' });
           // Calcualte accumulated income
           accumulated_income = - capex_project + pbp.monthly_project_profit * i
-          accumulated_income_list.push(accumulated_income)
+          accumulated_income_list.push({month: month, data: accumulated_income})
+          
+          if( i > 100 ) break;        
         }while(accumulated_income < 0 );
       }else{
         row_list = `<tr><td colspan="4" class="text-center">Project not profitable<td></tr>`
@@ -352,13 +357,11 @@
       // Set results in table
       if(accumulated_income_list.length > 0){
         for( let i = 0; i < accumulated_income_list.length; i++){
-          const date = new Date();  // 2009-11-10
-          date.setMonth( date.getMonth() + i );
-          const month = date.toLocaleString('en-US', { month: 'long' });
-          const row = template_row.format( month, 
+
+          const row = template_row.format( accumulated_income_list[i].month, 
                                       pbp.monthly_project_profit,
                                       opex_monthly, 
-                                      accumulated_income_list[i])
+                                      accumulated_income_list[i].data)
           row_list +=  row 
           if( i > 12 ){
             row_list += `<tr><td colspan="4" class="text-center">...<td></tr>`
@@ -415,7 +418,6 @@
           config_list.push(config)
         }
       }
-
 
       return optimal_config;
     }
@@ -485,7 +487,7 @@
       })
     })
 
-
+    let chart = null;
 
     am4core.ready(function () {
 
@@ -494,7 +496,7 @@
       // Themes end
 
       // Create chart instance
-      var chart = am4core.create("chartdiv", am4charts.XYChart);
+      chart = am4core.create("chartdiv", am4charts.XYChart);
 
       // Add data
       chart.data = generatechartData();
