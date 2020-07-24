@@ -54,13 +54,13 @@
             </div>
             <div class="row text-center mt-3">
                 <div class="col-md-4">
-                    <button type="button" class="btn btn-reset btn-secondary">Reset Configuration</button>
+                    <button type="button" class="btn btn-reset btn-secondary w-100">Reset</button>
                 </div>
                 <div class="col-md-4">
-                    <button type="button" class="btn btn-set btn-secondary">Set Configuration</button>
+                    <button type="button" class="btn btn-set btn-secondary w-100">Set</button>
                 </div>
                 <div class="col-md-4">
-                    <button type="button" class="btn btn-refresh btn-secondary">Refresh Configuration</button>
+                    <button type="button" class="btn btn-refresh btn-secondary w-100">Get</button>
                 </div>
             </div>
         </section>
@@ -84,103 +84,45 @@
     <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
 
-    <script>
-        // Your web app's Firebase configuration
-        var firebaseConfig = {
-            apiKey: "AIzaSyBlcx8yw7hihZ4iEWupw9we6ZsWvkt5Vro",
-            authDomain: "meatze.firebaseapp.com",
-            databaseURL: "https://meatze.firebaseio.com",
-            projectId: "meatze",
-            storageBucket: "meatze.appspot.com",
-            messagingSenderId: "1002638510838",
-            appId: "1:1002638510838:web:0118ef204af0e7d6d37ad7"
-        };
+    <!-- Project scripts -->
+    <script src="/js/meatze-firebase.js"></script>
 
+    <script type="text/javascript">
 
-        // Initialize Firebase with a "default" Firebase project
-        const defaultProject = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Meatze Firebase
+        const meatze_firebase = new MeatzeFirebase( "config" )
 
-        const collection_name = "config"
-        function reset_configuration() {
-            for (const item in SERVER_TYPE_LIST_DEFAULT) {
-                console.log("Reset Configuration -> ", collection_name, item)
-                Promise.resolve()
-                .then( () => {
-                    console.log("Finishing set delete")
-                    return db.collection(collection_name).doc(item).delete()
-                })
-                .then( () => {
-                    console.log("Finishing set configuration")
-                    return db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST_DEFAULT[item])
-                })
-                .then( () => {
-                    console.log("Finishing set configuration")
-                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
-                })
-
-
-
-
-                // db.collection(collection_name).doc(item).delete()
-                //     .then(function() {
-                //         console.log("Document successfully deleted!");
-                //     }).catch(function(error) {
-                //         console.error("Error removing document: ", error);
-                //     });
+        const initialise = async () => {
+            try{
+                await meatze_firebase.authenticate()
+                const result = await meatze_firebase.get();
+                $('.textarea-config').val(JSON.stringify(result, null, 4))
+            }catch(e){
+                console.log(e)
             }
         }
-
-
-        function set_configuration(){
-            SERVER_TYPE_LIST = JSON.parse( $('.textarea-config').val() )
-            for (const item in SERVER_TYPE_LIST) {
-                //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
-                db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST[item])
-                    .then(function (docRef) {
-                        console.log("Already exists")
-                        console.log("Already exists", docRef)
-                    })
-                    .catch(function (error) {
-                        console.error("Error adding document: ", error);
-                    });
-            }
-        }
-        
-
-        function refresh_configuration() {
-            SERVER_TYPE_LIST = {}
-            db.collection( collection_name ).get().then(function(querySnapshot) {
-                querySnapshot.forEach(function(doc) {
-                    // doc.data() is never undefined for query doc snapshots
-                    SERVER_TYPE_LIST[doc.id] = doc.data()
-                });
-                $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST, null, 4))
-            });
-
-        }
- 
-        const SERVER_TYPE_LIST_DEFAULT = {
-            S17: { price: 2000, hashing: 70, consumption: 2.8 },
-            T17: { price: 960, hashing: 58, consumption: 2.9 },
-            S9: { price: 53.5, hashing: 10, consumption: 0.72 },
-            S19: { price: 2160, hashing: 95, consumption: 3.3 },
-            M20s: { price: 900, hashing: 68, consumption: 3.3 },
-            M31s: { price: 1320, hashing: 76, consumption: 3.2 },
-            M30sPlus: { price: 2760, hashing: 100, consumption: 3.4 }
-        }
-        let SERVER_TYPE_LIST = Object.assign({}, SERVER_TYPE_LIST_DEFAULT)
-
 
         $(document).ready( () => {
+            
+            // Initialise
+            initialise()
 
-            // Load Configuration
-            refresh_configuration()
-
-            // Btn Click
-            $('.btn-reset').click( () => reset_configuration() )
-            $('.btn-set').click( () => set_configuration() )
-            $('.btn-refresh').click( () => refresh_configuration() )
+            // Events
+            $('.btn-reset').click( () => {
+                meatze_firebase.reset() 
+                .then( (result) => {
+                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                })
+            })
+            $('.btn-set').click( () => {
+                meatze_firebase.set() 
+            })
+            $('.btn-refresh').click( () => {
+                meatze_firebase.get() 
+                .then( (result) => {
+                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                })
+            })
         })
 
 
