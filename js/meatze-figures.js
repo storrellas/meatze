@@ -23,6 +23,8 @@ class MeatzeFigures {
     this.capex = {};
     this.opex_monthly = 0;
     this.pbp = 0;
+    this.monthly_project_income = 0;
+    this.monthly_project_profit = 0;
   }
 
   set_configuration(server_type, container_type){
@@ -91,10 +93,10 @@ class MeatzeFigures {
                                           montly_btc_issued * 
                                           ( this.yearly_operation_hours / year_hours); // [BTC]
   
-    const monthly_project_income = monthly_project_income_btc * market_price_usd;
-    const monthly_project_profit = monthly_project_income - this.opex_monthly;
-    this.pbp = this.capex.project / monthly_project_profit;
-    return this.pbp;
+    this.monthly_project_income = monthly_project_income_btc * market_price_usd;
+    this.monthly_project_profit = this.monthly_project_income - this.opex_monthly;
+    this.pbp = this.capex.project / this.monthly_project_profit;
+    return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
   }
   
 

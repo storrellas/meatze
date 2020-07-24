@@ -213,29 +213,20 @@
       <hr>
       <div class="row col-md-12">
 
-        <table class="table" style="background-color: #F5F5F5	">
+        <table id="result-table" class="table" style="background-color: #F5F5F5	">
           <thead style="background-color: #282828; color: #DDDDDD">
             <tr>
               <th scope="col">Month</th>
-              <th scope="col">Income</th>
-              <th scope="col">Profit</th>
+              <th scope="col">Montly Income</th>
+              <th scope="col">Monthly OPEX</th>
+              <th scope="col">Accumulated Monthly Profit</th>              
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1</td>
-              <td>1000</td>
-              <td>500</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>1200</td>
-              <td>700</td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>1200</td>
-              <td>700</td>
+              <td colspan="4" class="text-center">
+                </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -273,6 +264,12 @@
 
   <script type="text/javascript">
 
+    String.prototype.format = function () {
+      var i = 0, args = arguments;
+      return this.replace(/{}/g, function () {
+        return typeof args[i] != 'undefined' ? args[i++] : '';
+      });
+    };
 
     // Retrieved blockchain
     let market_price_usd = undefined;
@@ -324,8 +321,63 @@
         $(".alert-pbp ").removeClass('invisible')
         $('#pbp').val('')
       }else{
-        $('#pbp').val(pbp)
+        $('#pbp').val(pbp.value)
       }
+
+      // Calculate evolution
+      const template_row = `<tr>
+                      <td>{}</td>
+                      <td>{}</td>
+                      <td>{}</td>
+                      <td>{}</td>
+                      </tr>`            
+      $('#result-table tbody').empty()
+      let row_list = ""
+      let accumulated_income_list = []
+      if( pbp.monthly_project_profit > 0 ){
+        let accumulated_income = 0;
+        let i = 0;
+        do{
+          i++;
+          const date = new Date();  // 2009-11-10
+          date.setMonth( date.getMonth() + i );
+          const month = date.toLocaleString('en-US', { month: 'long' });
+          accumulated_income = - capex_project + pbp.monthly_project_profit * i
+          accumulated_income_list.push(accumulated_income)
+          const row = template_row.format( month, 
+                                      pbp.monthly_project_profit,
+                                      opex_monthly, 
+                                      accumulated_income)
+          row_list +=  row 
+          if( i > 12 ){
+            row_list += `<tr><td colspan="4" class="text-center">...<td></tr>`
+            break;
+          } 
+        }while(accumulated_income < 0 );
+      }else{
+        row_list = `<tr><td colspan="4" class="text-center">Project not profitable<td></tr>`
+      }
+      $('#result-table tbody').html( row_list )
+
+      // if(accumulated_income_list.length > 0){
+      //   for( let i = 0; i < accumulated_income_list.length; i++){
+      //     const row = template_row.format( month, 
+      //                                 pbp.monthly_project_profit,
+      //                                 opex_monthly, 
+      //                                 accumulated_income)
+      //     row_list +=  row 
+      //     if( i > 12 ){
+      //       row_list += `<tr><td colspan="4" class="text-center">...<td></tr>`
+      //       break;
+      //     }
+      //   }
+      // }else{
+      //   row_list = `<tr><td colspan="4" class="text-center">Project not profitable<td></tr>`
+      // }
+      // $('#result-table tbody').html( row_list )
+
+      console.log("accumulated_income ", accumulated_income_list)
+
     }
 
     const fill_configurations = async () => {
@@ -351,7 +403,7 @@
       config_list = []
       for(const container in CAPEX_CONTAINER ){ // Iterate on containers
 
-        for(const server in SERVER_TYPE_LIST ){ // Iterate on servers
+        for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
           output = generate_figures(server, container)
           const config = {
             server: server, container: container, ...output
@@ -388,6 +440,7 @@
       // Set output
       set_output( optimal_config.capex_server, optimal_config.capex_project, 
                 optimal_config.opex_monthly, optimal_config.pbp)
+                
     }
 
     const set_output_figures = () => {
@@ -402,6 +455,8 @@
       // Set output
       set_output( selected_config.capex_server, selected_config.capex_project, 
                   selected_config.opex_monthly, selected_config.pbp)
+
+
     }
 
     const initialise = async () => {
@@ -413,12 +468,17 @@
       // Genearte configuration
       $('.alert-optimal span').text("Calculating outputs ");
       await calculate_output_figures();
+
+
+
     }
 
     let config_list = []
     $(document).ready( () => {
-      
+      // Initialise UI
       initialise()
+
+
       
       $('.user-input-data').on('input', () => calculate_output_figures() )
       $('.config-input-data').on('change', () => set_output_figures() )
