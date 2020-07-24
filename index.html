@@ -327,6 +327,7 @@
       // Calculate evolution
       let row_list = ""
       let accumulated_income_list = []
+      let positive_values = 10;
       if( pbp.monthly_project_profit > 0 ){
         let accumulated_income = 0;
         let i = 0;
@@ -336,13 +337,14 @@
           date.setMonth( date.getMonth() + i );          
           // Calcualte accumulated income
           accumulated_income = - capex_project + pbp.monthly_project_profit * i
-          accumulated_income_list.push({date: date, data: accumulated_income})
+          accumulated_income_list.push({date: date, value: accumulated_income})
           
-          if( i > 100 ) break;        
-        }while(accumulated_income < 0 );
+          if( i > 100 ) break; 
+          if( accumulated_income > 0 ){
+            positive_values = positive_values - 1;
+          }       
+        }while(accumulated_income < 0 || positive_values > 0);
       }
-
-
 
       // Set results in table
       const template_row = `<tr>
@@ -358,7 +360,7 @@
           const row = template_row.format( month, 
                                       pbp.monthly_project_profit,
                                       opex_monthly, 
-                                      accumulated_income_list[i].data)
+                                      accumulated_income_list[i].value)
           row_list +=  row 
           if( i > 12 ){
             row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
@@ -368,10 +370,11 @@
       }else{
         row_list = '<tr><td colspan="4" class="text-center">Project not profitable</td></tr>'
       }
-      console.log(row_list)
       $('#result-table tbody').html( row_list )
 
-      //console.log("accumulated_income ", accumulated_income_list)
+      // Update chart 
+      chart.data = accumulated_income_list
+      //chart.data = generatechartData()
     }
 
     const fill_configurations = async () => {
@@ -468,10 +471,13 @@
 
     let config_list = []
     $(document).ready( () => {
+      // Fake project
+      // $('#project-size').val(1000), 
+      // $('#electricity-cost').val(0.0001), 
+      // $('#yearly-hours').val(8000)
+
       // Initialise UI
       initialise()
-
-
       
       $('.user-input-data').on('input', () => calculate_output_figures() )
       $('.config-input-data').on('change', () => set_output_figures() )
@@ -487,6 +493,57 @@
 
     let chart = null;
 
+// -------------------------------------------
+    // function generatechartData() {
+    //   var chartData = [];
+    //   var firstDate = new Date();
+    //   firstDate.setDate(firstDate.getDate() - 150);
+    //   var visits = -40;
+    //   var b = 0.6;
+    //   for (var i = 0; i < 150; i++) {
+    //     // we create date objects here. In your data, you can have date strings
+    //     // and then set format of your dates using chart.dataDateFormat property,
+    //     // however when possible, use date objects, as this will speed up chart rendering.
+    //     var newDate = new Date(firstDate);
+    //     newDate.setDate(newDate.getDate() + i);
+    //     if (i > 80) {
+    //       b = 0.4;
+    //     }
+    //     visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+
+    //     chartData.push({
+    //       date: newDate,
+    //       value: visits
+    //     });
+    //   }
+    //   console.log( chartData )
+    //   return chartData;
+    // }
+
+    // function generatechartData2(){
+    //   var accumulated_income_list =[]
+    //   var capex_project = 1000;
+    //   var monthly_project_profit = 30;
+    //   let accumulated_income = 0;
+
+    //   // Iterate evolution
+    //   let i = 0;
+    //   do{
+    //     i++;
+    //     const date = new Date();  // 2009-11-10
+    //     date.setMonth( date.getMonth() + i );          
+    //     // Calcualte accumulated income
+    //     accumulated_income = - capex_project + monthly_project_profit * i
+    //     accumulated_income_list.push({date: date, value: accumulated_income})
+        
+    //     if( i > 100 ) break;        
+    //   }while(accumulated_income < 0 );
+
+    //   console.log( accumulated_income_list )
+    //   return accumulated_income_list;
+    // }
+// -------------------------------------------
+
     am4core.ready(function () {
 
       // Themes begin
@@ -496,32 +553,13 @@
       // Create chart instance
       chart = am4core.create("chartdiv", am4charts.XYChart);
 
-      // Add data
-      chart.data = generatechartData();
-      function generatechartData() {
-        var chartData = [];
-        var firstDate = new Date();
-        firstDate.setDate(firstDate.getDate() - 150);
-        var visits = -40;
-        var b = 0.6;
-        for (var i = 0; i < 150; i++) {
-          // we create date objects here. In your data, you can have date strings
-          // and then set format of your dates using chart.dataDateFormat property,
-          // however when possible, use date objects, as this will speed up chart rendering.
-          var newDate = new Date(firstDate);
-          newDate.setDate(newDate.getDate() + i);
-          if (i > 80) {
-            b = 0.4;
-          }
-          visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
 
-          chartData.push({
-            date: newDate,
-            visits: visits
-          });
-        }
-        return chartData;
-      }
+      chart_list1 = generatechartData()
+      chart_list2 = generatechartData2()
+
+      // Add data
+      chart.data = [];
+
 
       // Create axes
       var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
@@ -533,7 +571,7 @@
 
       // Create series
       var series = chart.series.push(new am4charts.LineSeries());
-      series.dataFields.valueY = "visits";
+      series.dataFields.valueY = "value";
       series.dataFields.dateX = "date";
       series.strokeWidth = 3;
       series.tooltipText = "{valueY.value}";
@@ -542,7 +580,8 @@
       // Create a range to change stroke for values below 0
       var range = valueAxis.createSeriesRange(series);
       range.value = 0;
-      range.endValue = -1000;
+      //range.endValue = -1000;
+      range.endValue = -1000 * 1000 * 1000 * 1000;
       range.contents.stroke = chart.colors.getIndex(4);
       range.contents.fill = range.contents.stroke;
       range.contents.strokeOpacity = 0.7;
@@ -555,12 +594,10 @@
 
       series.tooltip.getFillFromObject = false;
       series.tooltip.adapter.add("x", (x, target) => {
-        if (series.tooltip.tooltipDataItem.valueY < 0) {
-          series.tooltip.background.fill = chart.colors.getIndex(4);
-        }
-        else {
-          series.tooltip.background.fill = chart.colors.getIndex(0);
-        }
+
+        series.tooltip.background.fill = 
+          series.tooltip.tooltipDataItem.valueY < 0?chart.colors.getIndex(4):chart.colors.getIndex(0);
+
         return x;
       })
 
