@@ -90,6 +90,34 @@
           <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
         </div>
       </div>
+
+      <div class="row">
+        <div class="offset-md-3 col-md-6 input-group">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="inputGroupSelect01">Scenario</label>
+            </div>
+            <select class="custom-select user-input-data" id="scenario-type">
+              <option value="pessimistic">Pessimistic          -  3% /  6%</option>
+              <option value="conservative">Consevartive         -  5% /  5%</option>
+              <option value="slightly">Slightly Optimistic  -  8% /  5%</option>
+              <option value="optimistic">Optimistic           - 15%	/ 10%</option>
+            </select>
+          </div>
+          <small id="emailHelp" class="form-text text-muted">
+              Monthly BTC Price Change / Monthly Hashrate Delta
+          </small>
+
+        </div>
+      </div>
+
+      <div class="row mt-3">
+          <div class="col-md-3">
+            <h5>Configuration</h5>
+          </div>
+      </div>
+
+
       <div class="row mt-3">
           <div class="col-md-6 input-group mb-3">
               <div class="input-group mb-3">
@@ -112,28 +140,33 @@
           </div>
         </div>
 
+        <div class="row mt-3">
+            <div class="col-md-3">
+              <h5>Parameters</h5>
+            </div>
+        </div>
 
         <div class="row mt-3">
             <div class="col-md-6 input-group mb-3">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                      <label class="input-group-text" for="inputGroupSelect01">Market Price USD</label>
-                    </div>
-                    <input type="text" readonly class="form-control user-input-data" id="market-price-usd" placeholder="Market Price USD"
-                        aria-label="Market Price USD" aria-describedby="basic-addon2">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">Market Price USD</label>
                   </div>
-              <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+                  <input type="text" readonly class="form-control user-input-data" id="market-price-usd" placeholder="Market Price USD"
+                    aria-label="Market Price USD" aria-describedby="basic-addon2">
+                </div>
+                <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
             </div>
   
             <div class="col-md-6 input-group mb-3">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                      <label class="input-group-text" for="inputGroupSelect01">Hash Rate</label>
-                    </div>
-                    <input type="text" readonly class="form-control user-input-data" id="hash-rate" placeholder="Hash Rate"
-                      aria-label="Hash Rate" aria-describedby="basic-addon2">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">Hash Rate</label>
                   </div>
-              <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
+                  <input type="text" readonly class="form-control user-input-data" id="hash-rate" placeholder="Hash Rate"
+                    aria-label="Hash Rate" aria-describedby="basic-addon2">
+                </div>
+                <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
             </div>
           </div>
 
@@ -178,29 +211,6 @@
                 placeholder="Expected PBP">
               <div class="alert alert-pbp alert-danger invisible" role="alert">Configuration non-profitable</div>
           </div>
-
-
-          <!-- <div class="form-group" style="margin-top: 50px">
-            <label for="exampleInputEmail1">Miner Model</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Miner Model">
-          </div>
-          <div class="form-group">
-            <label for="exampleInputEmail1">Miner Quantity</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Miner Quantity">
-          </div>
-          <div class="form-group">
-            <label for="exampleInputEmail1">Container Type</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Container Type">
-          </div>
-          <div class="form-group">
-            <label for="exampleInputEmail1">Container Quantity</label>
-            <input readonly type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-              placeholder="Container Quantity">
-          </div> -->
-
         </div>
         <div class="col-md-8">
           <div id="chartdiv"></div>
@@ -278,29 +288,27 @@
     // Meatze Firebase
     const meatze_firebase = new MeatzeFirebase( "config" )
 
-    const get_input = () => {
-      return { 
-        project_size : $('#project-size').val(), 
-        electricity_cost: $('#electricity-cost').val(), 
-        yearly_operation_hours: $('#yearly-hours').val()
-      }
-    }
 
-
-    const generate_figures = (server_type, container_type) => {
+    const generate_figures = (server_type, container_type,
+                              market_price_usd_delta = 100, hash_rate_delta = 100) => {
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
       // Set Configuration
       meatze_figures.set_configuration(server_type, container_type)
 
       // Grab inputs
-      const input = get_input()
-      meatze_figures.set_input(input.project_size, input.electricity_cost, input.yearly_operation_hours)
+      const project_size = $('#project-size').val()
+      const electricity_cost = $('#electricity-cost').val()
+      const yearly_operation_hours = $('#yearly-hours').val()
+
+      // Set input / scenario
+      meatze_figures.set_input(project_size, electricity_cost, yearly_operation_hours)
+      meatze_figures.set_scenario(market_price_usd, hash_rate)
 
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
       const opex_monthly = meatze_figures.generate_opex();
-      const pbp = meatze_figures.generate_pbp(market_price_usd, hash_rate)
+      const pbp = meatze_figures.generate_pbp(market_price_usd_delta, hash_rate_delta)
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, pbp: pbp }
@@ -325,6 +333,8 @@
       }
 
       // Calculate evolution
+      const delta = {market_price_usd: 3, hashrate: 5};
+
       let row_list = ""
       let accumulated_income_list = []
       let positive_values = 10;
@@ -334,7 +344,7 @@
         do{
           i++;
           const date = new Date();  // 2009-11-10
-          date.setMonth( date.getMonth() + i );          
+          date.setMonth( date.getMonth() + i );  
           // Calcualte accumulated income
           accumulated_income = - capex_project + pbp.monthly_project_profit * i
           accumulated_income_list.push({date: date, value: accumulated_income})
@@ -471,10 +481,14 @@
 
     let config_list = []
     $(document).ready( () => {
-      // Fake project
-      // $('#project-size').val(1000), 
-      // $('#electricity-cost').val(0.0001), 
-      // $('#yearly-hours').val(8000)
+      // Fake input
+      $('#project-size').val(1000), 
+      $('#electricity-cost').val(0.0001), 
+      $('#yearly-hours').val(8000)
+
+      $('#project-size').val(5), 
+      $('#electricity-cost').val(0.01), 
+      $('#yearly-hours').val(8600)
 
       // Initialise UI
       initialise()
