@@ -79,6 +79,39 @@ class MeatzeFigures {
     return this.opex_monthly;
   }
   
+  generate_monthly_income(market_price_usd_delta = 100, hash_rate_delta = 100){
+    
+    // Monthly OPEX
+    if( this.electricity_cost.length == 0 || 
+        this.project_size.length == 0 ||
+        this.yearly_operation_hours.length == 0) {
+      this.pbp = 0;
+      return this.pbp;
+    }
+  
+    // Project Hashpower
+    const server = this.server_type_list[this.server_type];
+    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
+    const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
+  
+    // Corrected market_price_usd / hash_rate
+    const market_price_usd_corrected = this.market_price_usd * (market_price_usd_delta / 100);
+    const hash_rate_corrected = this.hash_rate * (hash_rate_delta / 100);
+
+
+    // Calculate PBP
+    const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
+    const year_hours = 8760; // hours in a year
+    const monthly_project_income_btc = (project_hashpower / hash_rate_corrected) * 
+                                          montly_btc_issued * 
+                                          ( this.yearly_operation_hours / year_hours); // [BTC]
+  
+    this.monthly_project_income = monthly_project_income_btc * market_price_usd_corrected;
+    this.monthly_project_profit = this.monthly_project_income - this.opex_monthly;
+    this.pbp = this.capex.project / this.monthly_project_profit;
+    return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
+  }
+
   generate_pbp(market_price_usd_delta = 100, hash_rate_delta = 100){
     
     // Monthly OPEX

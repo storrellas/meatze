@@ -418,20 +418,50 @@
 
           // Grab lowest PBP
           if( optimal_pbp === undefined ){
-            optimal_pbp = output.pbp;
+            optimal_pbp = output.pbp.value;
             optimal_config = Object.assign({}, config)
           }else{
-            if( optimal_pbp > output.pbp && output.pbp >= 0){
-              optimal_pbp = output.pbp;
+            if( optimal_pbp > output.pbp.value && output.pbp.value >= 0){
+              optimal_pbp = output.pbp.value;
               optimal_config = Object.assign({}, config)
             }
           }
           config_list.push(config)
         }
       }
-
       return optimal_config;
     }
+
+    const find_optimal_config_v2 = () => {
+      
+      // Iterate configurations and find optimal
+      let optimal_pbp = undefined;
+      let optimal_config = undefined;
+      config_list = []
+      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+
+        for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
+          output = generate_figures(server, container)
+          const config = {
+            server: server, container: container, ...output
+          }
+
+          // Grab lowest PBP
+          if( optimal_pbp === undefined ){
+            optimal_pbp = output.pbp.value;
+            optimal_config = Object.assign({}, config)
+          }else{
+            if( optimal_pbp > output.pbp.value && output.pbp.value >= 0){
+              optimal_pbp = output.pbp.value;
+              optimal_config = Object.assign({}, config)
+            }
+          }
+          config_list.push(config)
+        }
+      }
+      return optimal_config;
+    }
+
 
     const calculate_output_figures = (server_type, container_type) => {
       const optimal_config = find_optimal_config()
