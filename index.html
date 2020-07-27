@@ -288,7 +288,24 @@
     // Meatze Firebase
     const meatze_firebase = new MeatzeFirebase( "config" )
 
+    const fill_configurations = async () => {
 
+      const server_type_list = await meatze_firebase.get()              
+
+      $("#server-type").empty()
+      for(const server in server_type_list ){ // Iterate on servers
+        $("#server-type").append(new Option(server, server));
+      }
+      $("#container-type").empty()
+      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+        $("#container-type").append(new Option(container, container));
+      }
+
+    }
+
+    // -----
+    // Generates figures
+    // -----
     const generate_figures = (server_type, container_type,
                               market_price_usd_delta = 100, hash_rate_delta = 100) => {
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
@@ -307,31 +324,95 @@
 
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
-      const opex_monthly = meatze_figures.generate_opex();
+      const opex_monthly = meatze_figures.generate_opex_monthly();
       const pbp = meatze_figures.generate_pbp(market_price_usd_delta, hash_rate_delta)
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, pbp: pbp }
     }
 
-    const set_output = (capex_server, capex_project, opex_monthly, pbp) => {
+    const generate_figures_v2 = (server_type, container_type,
+                                    market_price_usd_delta = 0, hash_rate_delta = 0) => {
+      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
+
+      // Set Configuration
+      meatze_figures.set_configuration(server_type, container_type)
+
+      // Grab inputs
+      const project_size = $('#project-size').val()
+      const electricity_cost = $('#electricity-cost').val()
+      const yearly_operation_hours = $('#yearly-hours').val()
+
+      // Set input / scenario
+      meatze_figures.set_input(project_size, electricity_cost, yearly_operation_hours)
+      meatze_figures.set_scenario(market_price_usd, hash_rate)
+
+      $(".alert-pbp ").addClass('invisible')
+      const capex = meatze_figures.generate_capex()
+      const opex_monthly = meatze_figures.generate_opex_monthly();
+      const result_pbp = meatze_figures.generate_pbp_v2(market_price_usd_delta, hash_rate_delta)
+
+      return { capex_server: capex.server, capex_project: capex.project, 
+              opex_monthly: opex_monthly, ...result_pbp }
+    }
+
+
+    // -----
+    // Sets the output
+    // -----
+    const set_output = ( config ) => {
+
 
       // Capex Project
-      $('#capex-server').val(capex_server)
-      const capex_project_round = Math.round(capex_project * 100) / 100
+      $('#capex-server').val(config.capex_server)
+      const capex_project_round = Math.round(config.capex_project * 100) / 100;
       $('#capex-total').val(capex_project_round)
 
       // Montly OPEX
-      $('#opex-monthly').val( opex_monthly>0?opex_monthly:'' )
+      $('#opex-monthly').val( config.opex_monthly>0?config.opex_monthly:'' )
 
       // Expected PBP
-      if( pbp < 0 ){
+      if( config.pbp < 0 ){
         $(".alert-pbp ").removeClass('invisible')
         $('#pbp').val('')
       }else{
-        $('#pbp').val(pbp.value)
+        $('#pbp').val(config.pbp)
       }
 
+      console.log("Filling table")
+      // Row
+      const template_row = `<tr>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            </tr>`;
+      let row_list = "";
+      $('#result-table tbody').empty()
+      let i = 0;
+      let max_rows = (config.monthly_project_income_list.length<12)?
+                        config.monthly_project_income_list.length: 12;
+      console.log(max_rows)
+      for(i = 0; i < max_rows; i++){
+
+        console.log(config)
+        const date = new Date();  // 2009-11-10
+        date.setMonth( date.getMonth() + i );  
+        const month = date.toLocaleString('en-US', { month: 'long' });
+        const row = template_row.format( month, 
+                                         config.monthly_project_income_list[i].toFixed(4),
+                                    config.opex_monthly.toFixed(4), 
+                                    config.accumulated_profit_list[i].toFixed(4))
+        row_list +=  row 
+
+
+      }
+      if( max_rows == 12 ){
+        row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
+      }
+      $('#result-table tbody').html( row_list )
+
+      /*
       // Calculate evolution
       const delta = {market_price_usd: 3, hashrate: 5};
 
@@ -341,7 +422,7 @@
       if( pbp.monthly_project_profit > 0 ){
         let accumulated_income = 0;
         let i = 0;
-        do{
+        do {
           i++;
           const date = new Date();  // 2009-11-10
           date.setMonth( date.getMonth() + i );  
@@ -352,17 +433,17 @@
           if( i > 100 ) break; 
           if( accumulated_income > 0 ){
             positive_values = positive_values - 1;
-          }       
-        }while(accumulated_income < 0 || positive_values > 0);
+          }
+        } while(accumulated_income < 0 || positive_values > 0) ;
       }
 
       // Set results in table
       const template_row = `<tr>
-                      <td>{}</td>
-                      <td>{}</td>
-                      <td>{}</td>
-                      <td>{}</td>
-                      </tr>`            
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            </tr>`;
       $('#result-table tbody').empty()
       if(accumulated_income_list.length > 0){
         for( let i = 0; i < accumulated_income_list.length; i++){
@@ -385,33 +466,31 @@
       // Update chart 
       chart.data = accumulated_income_list
       //chart.data = generatechartData()
+      /**/
     }
 
-    const fill_configurations = async () => {
 
 
-      const server_type_list = await meatze_firebase.get()              
-
-      $("#server-type").empty()
-      for(const server in server_type_list ){ // Iterate on servers
-        $("#server-type").append(new Option(server, server));
-      }
-      $("#container-type").empty()
-      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
-        $("#container-type").append(new Option(container, container));
-      }
-    }
-
+    // -----
+    // Finds the optimal configuration
+    // -----
     const find_optimal_config = () => {
-      
+      /*
       // Iterate configurations and find optimal
       let optimal_pbp = undefined;
       let optimal_config = undefined;
       config_list = []
-      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+
+      
+      for(const container in CAPEX_CONTAINER ) { // Iterate on containers
 
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
-          output = generate_figures(server, container)
+          // -------->
+          console.log("server --> ", server)
+          console.log("container --> ", container)
+          // -------->
+
+          const output = generate_figures(server, container)
           const config = {
             server: server, container: container, ...output
           }
@@ -429,42 +508,51 @@
           config_list.push(config)
         }
       }
-      return optimal_config;
-    }
-
-    const find_optimal_config_v2 = () => {
+      /**/
+      //////////////////////////////////////////
       
-      // Iterate configurations and find optimal
-      let optimal_pbp = undefined;
-      let optimal_config = undefined;
-      config_list = []
-      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+      let market_price_usd_delta = 4;
+      let hash_rate_delta = 5;
 
+      // Calculate figures per month
+      let config_list = [];
+      for(const container in CAPEX_CONTAINER ) { // Iterate on containers
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
-          output = generate_figures(server, container)
-          const config = {
-            server: server, container: container, ...output
+          const figures = generate_figures_v2(server, container, 
+                                              market_price_usd_delta, hash_rate_delta)
+          if( figures.accumulated_profit > 0 ){
+            config_list.push({server: server, container: container, ...figures})
           }
-
-          // Grab lowest PBP
-          if( optimal_pbp === undefined ){
-            optimal_pbp = output.pbp.value;
-            optimal_config = Object.assign({}, config)
-          }else{
-            if( optimal_pbp > output.pbp.value && output.pbp.value >= 0){
-              optimal_pbp = output.pbp.value;
-              optimal_config = Object.assign({}, config)
-            }
-          }
-          config_list.push(config)
         }
       }
+      
+      // Find optimal
+      let optimal_config = config_list[0]
+      for( const config of config_list ){
+        if( config.pbp < optimal_config.pbp ){
+          optimal_config = config;
+        }else if (config.pbp == optimal_config.pbp &&
+                    config.accumulated_profit > optimal_config.accumulated_profit){
+          optimal_config = config;
+        }
+      }
+      // --------------------------
+
       return optimal_config;
     }
 
-
-    const calculate_output_figures = (server_type, container_type) => {
+    // -----
+    // Calculates the output configuration according to the user input
+    // and sets the output
+    // -----
+    const calculate_optimal_output_figures = (server_type, container_type) => {
+      
       const optimal_config = find_optimal_config()
+      if( optimal_config === undefined ){
+        const optimal_text = `Not enough data`
+        $('.alert-optimal').text(optimal_text)
+        return;
+      } 
 
       const optimal_text = `Optimal Configuration: SERVER=${optimal_config.server} / CONTAINER=${optimal_config.container}`
       $('.alert-optimal').text(optimal_text)
@@ -474,12 +562,14 @@
       $('#container-type').val( optimal_config.container )
 
       // Set output
-      set_output( optimal_config.capex_server, optimal_config.capex_project, 
-                optimal_config.opex_monthly, optimal_config.pbp)
-                
+      set_output( optimal_config )
+
     }
 
-    const set_output_figures = () => {
+    // -----
+    // Sets the output configuration according to a given configuration
+    // -----
+    const calculate_output_figures = () => {
 
       // Set configuration
       const server_type = $('#server-type').val()
@@ -489,8 +579,13 @@
           (obj.server === server_type && obj.container === container_type))[0]
 
       // Set output
-      set_output( selected_config.capex_server, selected_config.capex_project, 
-                  selected_config.opex_monthly, selected_config.pbp)
+      if( selected_config == undefined ){
+        const optimal_text = `Not enough data`
+        $('.alert-optimal').text(optimal_text)
+        return;
+      } 
+
+      set_output( selected_config )
 
 
     }
@@ -504,18 +599,14 @@
       // Genearte configuration
       $('.alert-optimal span').text("Calculating outputs ");
       await calculate_output_figures();
-
-
-
     }
 
     let config_list = []
     $(document).ready( () => {
       // Fake input
-      $('#project-size').val(1000), 
-      $('#electricity-cost').val(0.0001), 
-      $('#yearly-hours').val(8000)
-
+      // $('#project-size').val(1000), 
+      // $('#electricity-cost').val(0.0001), 
+      // $('#yearly-hours').val(8000)
       $('#project-size').val(5), 
       $('#electricity-cost').val(0.01), 
       $('#yearly-hours').val(8600)
@@ -523,8 +614,8 @@
       // Initialise UI
       initialise()
       
-      $('.user-input-data').on('input', () => calculate_output_figures() )
-      $('.config-input-data').on('change', () => set_output_figures() )
+      $('.user-input-data').on('input', () => calculate_optimal_output_figures() )
+      $('.config-input-data').on('change', () => calculate_output_figures() )
 
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {

@@ -55,7 +55,7 @@ class MeatzeFigures {
     const server = this.server_type_list[this.server_type];
     const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
     const capex_server = ( 1000 / (server.consumption * factor)  ) * server.price
-  
+
     // CAPEX Project
     let capex_project = (capex_server + CAPEX_CONTAINER[this.container_type]) * this.project_size
     if( this.project_size.length == 0){
@@ -65,28 +65,31 @@ class MeatzeFigures {
     return this.capex
   }
   
-  generate_opex() {
+  generate_opex_monthly() {
   
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
       this.project_size.length == 0){
       this.opex_monthly = 0;
-    }else{
-      const year_hours = 8760; // hours in a year
-      const factor_operation_hours = this.yearly_operation_hours / year_hours
-      this.opex_monthly = this.electricity_cost * 24 * 30 * 1000 * this.project_size * factor_operation_hours;
+      return this.opex_monthly;
     }
+
+    // Calculate OPEX
+    const year_hours = 8760; // hours in a year
+    const factor_operation_hours = this.yearly_operation_hours / year_hours
+    this.opex_monthly = this.electricity_cost * 24 * 30 * 1000 * this.project_size * factor_operation_hours;
     return this.opex_monthly;
   }
   
-  generate_monthly_income(market_price_usd_delta = 100, hash_rate_delta = 100){
+  generate_monthly_project_profit(month_market_price_usd_delta = 100, 
+                                  month_hash_rate_delta = 100){
     
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
         this.yearly_operation_hours.length == 0) {
-      this.pbp = 0;
-      return this.pbp;
+      this.monthly_project_profit = 0;
+      return this.monthly_project_profit;
     }
   
     // Project Hashpower
@@ -95,9 +98,8 @@ class MeatzeFigures {
     const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
   
     // Corrected market_price_usd / hash_rate
-    const market_price_usd_corrected = this.market_price_usd * (market_price_usd_delta / 100);
-    const hash_rate_corrected = this.hash_rate * (hash_rate_delta / 100);
-
+    const market_price_usd_corrected = this.market_price_usd * (month_market_price_usd_delta / 100);
+    const hash_rate_corrected = this.hash_rate * (month_hash_rate_delta / 100);
 
     // Calculate PBP
     const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
@@ -107,44 +109,65 @@ class MeatzeFigures {
                                           ( this.yearly_operation_hours / year_hours); // [BTC]
   
     this.monthly_project_income = monthly_project_income_btc * market_price_usd_corrected;
-    this.monthly_project_profit = this.monthly_project_income - this.opex_monthly;
-    this.pbp = this.capex.project / this.monthly_project_profit;
-    return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
+    this.monthly_project_profit = this.monthly_project_income - this.generate_opex_monthly();
+    return {income: this.monthly_project_income, profit: this.monthly_project_profit};
   }
 
-  generate_pbp(market_price_usd_delta = 100, hash_rate_delta = 100){
+  generate_pbp(market_price_usd_delta = 100, hash_rate_delta = 100) {
     
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
         this.yearly_operation_hours.length == 0) {
       this.pbp = 0;
-      return this.pbp;
+      this.monthly_project_profit = 0;
+      return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
     }
   
-    // Project Hashpower
-    const server = this.server_type_list[this.server_type];
-    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
-    const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
-  
-    // Corrected market_price_usd / hash_rate
-    const market_price_usd_corrected = this.market_price_usd * (market_price_usd_delta / 100);
-    const hash_rate_corrected = this.hash_rate * (hash_rate_delta / 100);
+    // Calculate monthtly project profit
+    output = 
+      this.generate_monthly_project_profit(market_price_usd_delta, hash_rate_delta)
 
-
-    // Calculate PBP
-    const montly_btc_issued = 6.25 * 6 * 24 * 30;   // BTC obtained in every month
-    const year_hours = 8760; // hours in a year
-    const monthly_project_income_btc = (project_hashpower / hash_rate_corrected) * 
-                                          montly_btc_issued * 
-                                          ( this.yearly_operation_hours / year_hours); // [BTC]
-  
-    this.monthly_project_income = monthly_project_income_btc * market_price_usd_corrected;
-    this.monthly_project_profit = this.monthly_project_income - this.opex_monthly;
-    this.pbp = this.capex.project / this.monthly_project_profit;
-    return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
+    // Generate PBP (linear approach)
+    this.pbp = this.generate_capex().project / this.output.profit
+    return { value: this.pbp, monthly_project_profit: this.monthly_project_profit }
   }
   
+  generate_pbp_v2(market_price_usd_delta = 0, hash_rate_delta = 0) {
+    
 
+    // Preconditions
+    if( this.electricity_cost.length == 0 || 
+        this.project_size.length == 0 ||
+        this.yearly_operation_hours.length == 0) {
+      return { value: 0, accumulated_profit: 0 }
+    }
+  
+    // Calculate monthtly project profit
+    let month = 0
+    let monthly_project_profit_list = [0];
+    let monthly_project_income_list = [0];
+    let accumulated_profit = - this.generate_capex().project
+    let accumulated_profit_list = [accumulated_profit]    
+    for(month = 0; month < 100; month++){
+      var month_market_price_usd_delta = 100 + market_price_usd_delta * month;
+      var month_hash_rate_delta = 100 + hash_rate_delta * month;
+      let output = 
+        this.generate_monthly_project_profit(month_market_price_usd_delta, 
+                                            month_hash_rate_delta)
+
+        // Check accumulated profit
+        monthly_project_profit_list.push(output.profit)
+        monthly_project_income_list.push(output.income)
+        accumulated_profit += output.profit;
+        accumulated_profit_list.push(accumulated_profit)
+        if( accumulated_profit > 0 ) break;
+    }
+    if( month == 100 ) this.pbp = undefined; 
+
+    return { pbp: month, monthly_project_profit_list: monthly_project_profit_list, 
+            monthly_project_income_list: monthly_project_income_list,
+              accumulated_profit: accumulated_profit, accumulated_profit_list: accumulated_profit_list }
+  }
   
 }
