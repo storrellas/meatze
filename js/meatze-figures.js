@@ -160,7 +160,11 @@ class MeatzeFigures {
 
     // Generate PBP (linear approach)
     this.pbp = this.generate_capex().project / output.profit
-    return { value: this.pbp, monthly_project_profit: this.monthly_project_profit }
+    //let monthly_project_profit_list = Array(this.pbp).fill(this.monthly_project_profit);
+    let monthly_project_profit_list = []
+
+    return { pbp: this.pbp, monthly_project_profit: this.monthly_project_profit,
+              monthly_project_profit_list: monthly_project_profit_list }
   }
   
   generate_pbp_v2(market_price_usd_delta = 0, hash_rate_delta = 0) {

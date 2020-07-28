@@ -313,32 +313,7 @@
     // -----
     // Generates figures
     // -----
-    /*
-    const generate_figures = (server_type, container_type,
-                              market_price_usd_delta = 100, hash_rate_delta = 100) => {
-      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
-      // Set Configuration
-      meatze_figures.set_configuration(server_type, container_type)
-
-      // Grab inputs
-      const project_size = $('#project-size').val()
-      const electricity_cost = $('#electricity-cost').val()
-      const yearly_operation_hours = $('#yearly-hours').val()
-
-      // Set input / scenario
-      meatze_figures.set_input(project_size, electricity_cost, yearly_operation_hours)
-      meatze_figures.set_scenario(market_price_usd, hash_rate)
-
-      $(".alert-pbp ").addClass('invisible')
-      const capex = meatze_figures.generate_capex()
-      const opex_monthly = meatze_figures.generate_opex_monthly();
-      const pbp = meatze_figures.generate_pbp()
-
-      return { capex_server: capex.server, capex_project: capex.project, 
-              opex_monthly: opex_monthly, pbp: pbp.value, monthly_project_profit: pbp.monthly_project_profit }
-    }
-    /**/
 
 
     const generate_figures_v1 = (meatze_input) => {
@@ -354,37 +329,34 @@
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
       const opex_monthly = meatze_figures.generate_opex_monthly();
-      const pbp = meatze_figures.generate_pbp()
+      const output = meatze_figures.generate_pbp()
+
+      console.log("-----------")
+      console.log(output)
+      console.log("-----------")
 
       return { capex_server: capex.server, capex_project: capex.project, 
-              opex_monthly: opex_monthly, pbp: pbp.value, monthly_project_profit: pbp.monthly_project_profit }
+              opex_monthly: opex_monthly, pbp: output.pbp, monthly_project_profit: output.monthly_project_profit }
     }
 
-    const generate_figures_v2 = (server_type, container_type,
-                                    market_price_usd_delta = 0, hash_rate_delta = 0) => {
+    const generate_figures_v2 = (meatze_input) => {
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
       // Set Configuration
-      meatze_figures.set_configuration(server_type, container_type)
-
-      // Grab inputs
-      const project_size = $('#project-size').val()
-      const electricity_cost = $('#electricity-cost').val()
-      const yearly_operation_hours = $('#yearly-hours').val()
+      meatze_figures.set_configuration(meatze_input.server_type, meatze_input.container_type)
 
       // Set input / scenario
-      meatze_figures.set_input(project_size, electricity_cost, yearly_operation_hours)
-      meatze_figures.set_scenario(market_price_usd, hash_rate)
+      meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
+      meatze_figures.set_scenario(meatze_input.market_price_usd, meatze_input.hash_rate)
 
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
       const opex_monthly = meatze_figures.generate_opex_monthly();
-      const result_pbp = meatze_figures.generate_pbp_v2(market_price_usd_delta, hash_rate_delta)
+      const result_pbp = meatze_figures.generate_pbp_v2(meatze_input.market_price_usd_delta, meatze_input.hash_rate_delta)
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, ...result_pbp }
     }
-
 
     // -----
     // Sets the output
@@ -452,6 +424,9 @@
       
       console.log( "config ... ", config )
       
+
+      // Version1
+      // -------------------
       // Calculate evolution
       let row_list = ""
       let accumulated_income_list = []
@@ -528,7 +503,6 @@
 
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
 
-
           // Grab inputs
           const project_size = $('#project-size').val()
           const electricity_cost = $('#electricity-cost').val()
@@ -538,10 +512,12 @@
                                                 market_price_usd, hash_rate)
 
           const output = generate_figures_v1(meatze_input)
-          //const output = generate_figures(server, container)
           const config = {
             server: server, container: container, ...output
           }
+          console.log("---- 345")
+          console.log(output )
+          console.log("----")
           // Grab lowest PBP
           if( optimal_pbp === undefined ){
             optimal_pbp = output.pbp.value;
@@ -573,30 +549,40 @@
       hash_rate_delta = 0;
 
       // Calculate figures per month
-      config_list = [];
+      let config_list_2 = [];
       for(const container in CAPEX_CONTAINER ) { // Iterate on containers
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
-          const figures = generate_figures_v2(server, container, 
-                                              market_price_usd_delta, hash_rate_delta)
+
+          // Grab inputs
+          const project_size = $('#project-size').val()
+          const electricity_cost = $('#electricity-cost').val()
+          const yearly_operation_hours = $('#yearly-hours').val()
+          const meatze_input = new MeatzeInput(project_size, electricity_cost, yearly_operation_hours,
+                                                server, container,
+                                                market_price_usd, hash_rate,
+                                                market_price_usd_delta, hash_rate_delta)
+
+          const figures = generate_figures_v2(meatze_input)
+
           if( figures.accumulated_profit > 0 ){
-            config_list.push({server: server, container: container, ...figures})
+            config_list_2.push({server: server, container: container, ...figures})
           }
         }
       }
       
-      console.log("config_list2", config_list)
-
-      /*
       // Find optimal
-      let optimal_config = config_list[0]
-      for( const config of config_list ){
+      let optimal_config_2 = config_list_2[0]
+      for( const config of config_list_2 ){
         if( config.pbp < optimal_config.pbp ){
-          optimal_config = config;
+          optimal_config_2 = config;
         }else if (config.pbp == optimal_config.pbp &&
                     config.accumulated_profit > optimal_config.accumulated_profit){
-          optimal_config = config;
+          optimal_config_2 = config;
         }
       }
+
+      console.log("config_list2", config_list_2)
+      console.log("optimal_config_2", optimal_config_2)
       /**/
       // --------------------------
 
