@@ -355,53 +355,6 @@
         $('#pbp').val(config.pbp)
       }
 
-      /*
-      // Row
-      const template_row = `<tr>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            </tr>`;
-      let row_list = "";
-      $('#result-table tbody').empty()
-      let i = 0;
-      let max_rows = (config.monthly_project_income_list.length<12)?
-                        config.monthly_project_income_list.length: 12;
-      for(i = 0; i < max_rows; i++){
-
-        const date = new Date();  // 2009-11-10
-        date.setMonth( date.getMonth() + i );  
-        const month = date.toLocaleString('en-US', { month: 'long' });
-        const row = template_row.format( month, 
-                                          config.monthly_project_income_list[i].toFixed(4),
-                                          config.opex_monthly.toFixed(4), 
-                                          config.accumulated_profit_list[i].toFixed(4))
-        row_list +=  row 
-      }
-      if( max_rows == 12 ){
-        row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
-      }
-      $('#result-table tbody').html( row_list )
-
-      // Generate chart data
-      const chart_data_list = []
-      for(const ind in config.accumulated_profit_list){
-        console.log(ind)
-        const date = new Date();  // 2009-11-10
-        date.setMonth( date.getMonth() + ind );  
-
-        chart_data_list.push( { date:date, value: config.accumulated_profit_list[ind]})
-      }
-
-      chart.data = chart_data_list
-      /**/
-      
-      console.log( "... rendering config ... ", config )
-      
-
-      // Version1
-      // -------------------
 
       // Set results in table
       let row_list = ""
