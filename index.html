@@ -315,8 +315,7 @@
     // -----
 
 
-
-    const generate_figures_v1 = (meatze_input) => {
+    const generate_figures = (meatze_input) => {
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
       // Set Configuration
@@ -326,30 +325,9 @@
       meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
       meatze_figures.set_scenario(meatze_input.market_price_usd, meatze_input.hash_rate)
 
-      $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
       const opex_monthly = meatze_figures.generate_opex_monthly();
-      const result_pbp = meatze_figures.generate_pbp()
-
-
-      return { capex_server: capex.server, capex_project: capex.project, 
-              opex_monthly: opex_monthly, ...result_pbp }
-    }
-
-    const generate_figures_v2 = (meatze_input) => {
-      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
-
-      // Set Configuration
-      meatze_figures.set_configuration(meatze_input.server_type, meatze_input.container_type)
-
-      // Set input / scenario
-      meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
-      meatze_figures.set_scenario(meatze_input.market_price_usd, meatze_input.hash_rate)
-
-      $(".alert-pbp ").addClass('invisible')
-      const capex = meatze_figures.generate_capex()
-      const opex_monthly = meatze_figures.generate_opex_monthly();
-      const result_pbp = meatze_figures.generate_pbp_v2(meatze_input.market_price_usd_delta, meatze_input.hash_rate_delta)
+      const result_pbp = meatze_figures.generate_pbp(meatze_input.market_price_usd_delta, meatze_input.hash_rate_delta)
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, ...result_pbp }
@@ -482,49 +460,6 @@
       console.log("------------------")
       console.log(" find_optimal_config ")
       console.log("------------------")
-      /*
-      // Iterate configurations and find optimal
-      let optimal_pbp = undefined;
-      let optimal_config = undefined;
-      let config_list = []
-
-      
-      for(const container in CAPEX_CONTAINER ) { // Iterate on containers
-
-        for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
-
-          // Grab inputs
-          const project_size = $('#project-size').val()
-          const electricity_cost = $('#electricity-cost').val()
-          const yearly_operation_hours = $('#yearly-hours').val()
-          const meatze_input = new MeatzeInput(project_size, electricity_cost, yearly_operation_hours,
-                                                server, container,
-                                                market_price_usd, hash_rate)
-
-          const output = generate_figures_v1(meatze_input)
-          const config = {
-            server: server, container: container, ...output
-          }
-
-          // Grab lowest PBP
-          if( optimal_pbp === undefined ){
-            optimal_pbp = output.pbp.value;
-            optimal_config = Object.assign({}, config)
-          }else{
-            if( optimal_pbp > output.pbp.value && output.pbp.value >= 0){
-              optimal_pbp = output.pbp.value;
-              optimal_config = Object.assign({}, config)
-            }
-          }
-          config_list.push(config)
-        }
-      }
-      console.log("config_list1", config_list)
-      console.log("optimal_config ", optimal_config)
-
-      /**/
-      //////////////////////////////////////////
-      
 
 
       // Determine scenario
@@ -536,8 +471,10 @@
       // market_price_usd_delta = 0;
       // hash_rate_delta = 0;
 
+      $(".alert-pbp ").addClass('invisible')
+
       // Calculate figures per month
-      let config_list_2 = [];
+      config_list = [];
       for(const container in CAPEX_CONTAINER ) { // Iterate on containers
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
 
@@ -550,32 +487,27 @@
                                                 market_price_usd, hash_rate,
                                                 market_price_usd_delta, hash_rate_delta)
 
-          const figures = generate_figures_v2(meatze_input)
+          const figures = generate_figures(meatze_input)
 
           if( figures.accumulated_profit > 0 ){
-            config_list_2.push({server: server, container: container, ...figures})
+            config_list.push({server: server, container: container, ...figures})
           }
         }
       }
       
       // Find optimal
-      let optimal_config_2 = config_list_2[0]
-      for( const config of config_list_2 ){
-        if( config.pbp < optimal_config_2.pbp ){
-          optimal_config_2 = config;
-        }else if (config.pbp == optimal_config_2.pbp &&
-                    config.accumulated_profit > optimal_config_2.accumulated_profit){
-          optimal_config_2 = config;
+      let optimal_config = config_list[0]
+      for( const config of config_list ){
+        if( config.pbp < optimal_config.pbp ){
+          optimal_config = config;
+        }else if (config.pbp == optimal_config.pbp &&
+                    config.first_positive_profit > optimal_config.first_positive_profit){
+          optimal_config = config;
         }
       }
 
-      console.log("config_list2", config_list_2)
-      console.log("optimal_config_2", optimal_config_2)
-      /**/
-      // --------------------------
-
-      config_list = config_list_2;
-      optimal_config = optimal_config_2;
+      console.log("config_list", config_list)
+      console.log("optimal_config", optimal_config)
 
       return optimal_config;
     }
@@ -696,28 +628,6 @@
     //   return chartData;
     // }
 
-    // function generatechartData2(){
-    //   var accumulated_income_list =[]
-    //   var capex_project = 1000;
-    //   var monthly_project_profit = 30;
-    //   let accumulated_income = 0;
-
-    //   // Iterate evolution
-    //   let i = 0;
-    //   do{
-    //     i++;
-    //     const date = new Date();  // 2009-11-10
-    //     date.setMonth( date.getMonth() + i );          
-    //     // Calcualte accumulated income
-    //     accumulated_income = - capex_project + monthly_project_profit * i
-    //     accumulated_income_list.push({date: date, value: accumulated_income})
-        
-    //     if( i > 100 ) break;        
-    //   }while(accumulated_income < 0 );
-
-    //   console.log( accumulated_income_list )
-    //   return accumulated_income_list;
-    // }
 // -------------------------------------------
 
     am4core.ready(function () {

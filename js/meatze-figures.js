@@ -140,61 +140,8 @@ class MeatzeFigures {
     return {income: this.monthly_project_income, profit: this.monthly_project_profit};
   }
 
-  generate_pbp() {
-    
-    // Monthly OPEX
-    if( this.electricity_cost.length == 0 || 
-        this.project_size.length == 0 ||
-        
-        this.yearly_operation_hours.length == 0) {
-      this.pbp = 0;
-      this.monthly_project_profit = 0;
-      return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
-    }
   
-    const market_price_usd_delta = 100;
-    const hash_rate_delta = 100;
-    // Calculate monthtly project profit
-    const output = 
-      this.generate_monthly_project_profit(market_price_usd_delta, hash_rate_delta)
-
-    // Generate PBP (linear approach)
-    this.pbp = this.generate_capex().project / output.profit
-    //let monthly_project_profit_list = Array(this.pbp).fill(this.monthly_project_profit);
-    //const pbp_int = Math.ceil(this.pbp)
-
-    let month = 0;
-    let monthly_project_profit_list = [0];
-    let monthly_project_income_list = [0];
-    let accumulated_profit = - this.generate_capex().project;
-    let accumulated_profit_list = [accumulated_profit];
-    let month_profit_positive = 0;
-    let evolution = []
-    for(month = 0; month < 100; month++){
-      
-        // Check accumulated profit
-        monthly_project_profit_list.push(output.profit)
-        monthly_project_income_list.push(output.income)
-        accumulated_profit += output.profit;
-        accumulated_profit_list.push(accumulated_profit)
-
-
-        evolution.push( {profit: output.profit, income: output.income, accumulated: accumulated_profit})
-        if( accumulated_profit > 0 ) month_profit_positive++;
-        if( month_profit_positive > 12 ) break;
-    }
-
-
-    return { pbp: this.pbp, 
-              monthly_project_profit: this.monthly_project_profit,
-              monthly_project_profit_list: monthly_project_profit_list,
-              monthly_project_income_list: monthly_project_income_list,
-              accumulated_profit: accumulated_profit,
-              accumulated_profit_list: accumulated_profit_list,
-              evolution: evolution}
-  }
-  
-  generate_pbp_v2(market_price_usd_delta = 0, hash_rate_delta = 0) {
+  generate_pbp(market_price_usd_delta = 0, hash_rate_delta = 0) {
     
 
     // Preconditions
@@ -234,10 +181,11 @@ class MeatzeFigures {
     }
 
     return { pbp: pbp, 
-              monthly_project_profit: 0,
-              monthly_project_profit_list: monthly_project_profit_list, 
-              monthly_project_income_list: monthly_project_income_list,
-              accumulated_profit: accumulated_profit, accumulated_profit_list: accumulated_profit_list,
+              // monthly_project_profit: 0,
+              // monthly_project_profit_list: monthly_project_profit_list, 
+              // monthly_project_income_list: monthly_project_income_list,
+              // accumulated_profit_list: accumulated_profit_list,
+              accumulated_profit: accumulated_profit, 
               evolution: evolution }
   }
   
