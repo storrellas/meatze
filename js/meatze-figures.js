@@ -22,7 +22,6 @@ class MeatzeFigures {
     // Scenario
     this.market_price_usd = 0;
     this.hash_rate = 0;
-    this.delta = {};
 
     // Output parameters
     this.capex = {};
