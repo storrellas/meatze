@@ -473,8 +473,20 @@
       
       const optimal_config = find_optimal_config()
       if( optimal_config === undefined ){
-        const optimal_text = `Not enough data`
+        const optimal_text = `Not found optimal configuration`
         $('.alert-optimal').text(optimal_text)
+
+        $('#capex-server').val('')
+        $('#capex-total').val('')
+        $('#opex-monthly').val('')
+        $('#pbp').val('')
+        return;
+      }
+
+      // Expected PBP
+      if( config.pbp < 0 ){
+        $(".alert-pbp ").removeClass('invisible')
+        $('#pbp').val('')
         return;
       } 
 
