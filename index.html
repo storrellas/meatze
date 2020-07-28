@@ -285,6 +285,13 @@
     let market_price_usd = undefined;
     let hash_rate = undefined;
 
+    const SCENARIO_LIST = {
+      pessimistic  : { market_price_usd_delta: 3,  hash_rate_delta: 6 },
+      conservative : { market_price_usd_delta: 5,  hash_rate_delta: 5 },
+      slightly     : { market_price_usd_delta: 8,  hash_rate_delta: 5 },
+      optmistic    : { market_price_usd_delta: 15, hash_rate_delta: 10 }
+    }
+
     // Meatze Firebase
     const meatze_firebase = new MeatzeFirebase( "config" )
 
@@ -328,7 +335,7 @@
       const pbp = meatze_figures.generate_pbp(market_price_usd_delta, hash_rate_delta)
 
       return { capex_server: capex.server, capex_project: capex.project, 
-              opex_monthly: opex_monthly, pbp: pbp }
+              opex_monthly: opex_monthly, pbp: pbp.value, monthly_project_profit: pbp.monthly_project_profit }
     }
 
     const generate_figures_v2 = (server_type, container_type,
@@ -379,7 +386,7 @@
         $('#pbp').val(config.pbp)
       }
 
-      console.log("Filling table")
+      /*
       // Row
       const template_row = `<tr>
                             <td>{}</td>
@@ -392,34 +399,42 @@
       let i = 0;
       let max_rows = (config.monthly_project_income_list.length<12)?
                         config.monthly_project_income_list.length: 12;
-      console.log(max_rows)
       for(i = 0; i < max_rows; i++){
 
-        console.log(config)
         const date = new Date();  // 2009-11-10
         date.setMonth( date.getMonth() + i );  
         const month = date.toLocaleString('en-US', { month: 'long' });
         const row = template_row.format( month, 
-                                         config.monthly_project_income_list[i].toFixed(4),
-                                    config.opex_monthly.toFixed(4), 
-                                    config.accumulated_profit_list[i].toFixed(4))
+                                          config.monthly_project_income_list[i].toFixed(4),
+                                          config.opex_monthly.toFixed(4), 
+                                          config.accumulated_profit_list[i].toFixed(4))
         row_list +=  row 
-
-
       }
       if( max_rows == 12 ){
         row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
       }
       $('#result-table tbody').html( row_list )
 
-      /*
-      // Calculate evolution
-      const delta = {market_price_usd: 3, hashrate: 5};
+      // Generate chart data
+      const chart_data_list = []
+      for(const ind in config.accumulated_profit_list){
+        console.log(ind)
+        const date = new Date();  // 2009-11-10
+        date.setMonth( date.getMonth() + ind );  
 
+        chart_data_list.push( { date:date, value: config.accumulated_profit_list[ind]})
+      }
+
+      chart.data = chart_data_list
+      /**/
+      
+      console.log( "config ... ", config )
+      
+      // Calculate evolution
       let row_list = ""
       let accumulated_income_list = []
       let positive_values = 10;
-      if( pbp.monthly_project_profit > 0 ){
+      if( config.monthly_project_profit > 0 ){
         let accumulated_income = 0;
         let i = 0;
         do {
@@ -427,7 +442,7 @@
           const date = new Date();  // 2009-11-10
           date.setMonth( date.getMonth() + i );  
           // Calcualte accumulated income
-          accumulated_income = - capex_project + pbp.monthly_project_profit * i
+          accumulated_income = - config.capex_project + config.monthly_project_profit * i
           accumulated_income_list.push({date: date, value: accumulated_income})
           
           if( i > 100 ) break; 
@@ -436,6 +451,7 @@
           }
         } while(accumulated_income < 0 || positive_values > 0) ;
       }
+
 
       // Set results in table
       const template_row = `<tr>
@@ -449,8 +465,8 @@
         for( let i = 0; i < accumulated_income_list.length; i++){
           const month = accumulated_income_list[i].date.toLocaleString('en-US', { month: 'long' });
           const row = template_row.format( month, 
-                                      pbp.monthly_project_profit,
-                                      opex_monthly, 
+                                      config.monthly_project_profit,
+                                      config.opex_monthly, 
                                       accumulated_income_list[i].value)
           row_list +=  row 
           if( i > 12 ){
@@ -475,7 +491,11 @@
     // Finds the optimal configuration
     // -----
     const find_optimal_config = () => {
-      /*
+      
+      console.log("------------------")
+      console.log(" find_optimal_config ")
+      console.log("------------------")
+
       // Iterate configurations and find optimal
       let optimal_pbp = undefined;
       let optimal_config = undefined;
@@ -485,10 +505,6 @@
       for(const container in CAPEX_CONTAINER ) { // Iterate on containers
 
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
-          // -------->
-          console.log("server --> ", server)
-          console.log("container --> ", container)
-          // -------->
 
           const output = generate_figures(server, container)
           const config = {
@@ -508,11 +524,18 @@
           config_list.push(config)
         }
       }
+      console.log("config_list ", config_list)
+      console.log("optimal_config ", optimal_config)
+
       /**/
       //////////////////////////////////////////
       
-      let market_price_usd_delta = 4;
-      let hash_rate_delta = 5;
+      /*
+      // Determine scenario
+      const scenario_selected = $('#scenario-type').val();
+      let market_price_usd_delta = SCENARIO_LIST[scenario_selected].market_price_usd_delta;
+      let hash_rate_delta = SCENARIO_LIST[scenario_selected].hash_rate_delta;
+
 
       // Calculate figures per month
       let config_list = [];
@@ -536,6 +559,7 @@
           optimal_config = config;
         }
       }
+      /**/
       // --------------------------
 
       return optimal_config;
@@ -629,54 +653,54 @@
     let chart = null;
 
 // -------------------------------------------
-    // function generatechartData() {
-    //   var chartData = [];
-    //   var firstDate = new Date();
-    //   firstDate.setDate(firstDate.getDate() - 150);
-    //   var visits = -40;
-    //   var b = 0.6;
-    //   for (var i = 0; i < 150; i++) {
-    //     // we create date objects here. In your data, you can have date strings
-    //     // and then set format of your dates using chart.dataDateFormat property,
-    //     // however when possible, use date objects, as this will speed up chart rendering.
-    //     var newDate = new Date(firstDate);
-    //     newDate.setDate(newDate.getDate() + i);
-    //     if (i > 80) {
-    //       b = 0.4;
-    //     }
-    //     visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    function generatechartData() {
+      var chartData = [];
+      var firstDate = new Date();
+      firstDate.setDate(firstDate.getDate() - 150);
+      var visits = -40;
+      var b = 0.6;
+      for (var i = 0; i < 150; i++) {
+        // we create date objects here. In your data, you can have date strings
+        // and then set format of your dates using chart.dataDateFormat property,
+        // however when possible, use date objects, as this will speed up chart rendering.
+        var newDate = new Date(firstDate);
+        newDate.setDate(newDate.getDate() + i);
+        if (i > 80) {
+          b = 0.4;
+        }
+        visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
 
-    //     chartData.push({
-    //       date: newDate,
-    //       value: visits
-    //     });
-    //   }
-    //   console.log( chartData )
-    //   return chartData;
-    // }
+        chartData.push({
+          date: newDate,
+          value: visits
+        });
+      }
+      console.log( chartData )
+      return chartData;
+    }
 
-    // function generatechartData2(){
-    //   var accumulated_income_list =[]
-    //   var capex_project = 1000;
-    //   var monthly_project_profit = 30;
-    //   let accumulated_income = 0;
+    function generatechartData2(){
+      var accumulated_income_list =[]
+      var capex_project = 1000;
+      var monthly_project_profit = 30;
+      let accumulated_income = 0;
 
-    //   // Iterate evolution
-    //   let i = 0;
-    //   do{
-    //     i++;
-    //     const date = new Date();  // 2009-11-10
-    //     date.setMonth( date.getMonth() + i );          
-    //     // Calcualte accumulated income
-    //     accumulated_income = - capex_project + monthly_project_profit * i
-    //     accumulated_income_list.push({date: date, value: accumulated_income})
+      // Iterate evolution
+      let i = 0;
+      do{
+        i++;
+        const date = new Date();  // 2009-11-10
+        date.setMonth( date.getMonth() + i );          
+        // Calcualte accumulated income
+        accumulated_income = - capex_project + monthly_project_profit * i
+        accumulated_income_list.push({date: date, value: accumulated_income})
         
-    //     if( i > 100 ) break;        
-    //   }while(accumulated_income < 0 );
+        if( i > 100 ) break;        
+      }while(accumulated_income < 0 );
 
-    //   console.log( accumulated_income_list )
-    //   return accumulated_income_list;
-    // }
+      console.log( accumulated_income_list )
+      return accumulated_income_list;
+    }
 // -------------------------------------------
 
     am4core.ready(function () {
@@ -693,7 +717,7 @@
       // chart_list2 = generatechartData2()
 
       // Add data
-      chart.data = [];
+      chart.data = generatechartData();
 
 
       // Create axes
