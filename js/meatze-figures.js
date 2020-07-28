@@ -161,10 +161,31 @@ class MeatzeFigures {
     // Generate PBP (linear approach)
     this.pbp = this.generate_capex().project / output.profit
     //let monthly_project_profit_list = Array(this.pbp).fill(this.monthly_project_profit);
-    let monthly_project_profit_list = []
+    //const pbp_int = Math.ceil(this.pbp)
+
+    let month = 0;
+    let monthly_project_profit_list = [0];
+    let monthly_project_income_list = [0];
+    let accumulated_profit = - this.generate_capex().project;
+    let accumulated_profit_list = [accumulated_profit];
+    let month_profit_positive = 0;
+    for(month = 0; month < 100; month++){
+      
+        // Check accumulated profit
+        monthly_project_profit_list.push(output.profit)
+        monthly_project_income_list.push(output.income)
+        accumulated_profit += output.profit;
+        accumulated_profit_list.push(accumulated_profit)
+        if( accumulated_profit > 0 ) month_profit_positive++;
+        if( month_profit_positive > 12 ) break;
+    }
+
 
     return { pbp: this.pbp, monthly_project_profit: this.monthly_project_profit,
-              monthly_project_profit_list: monthly_project_profit_list }
+              monthly_project_profit_list: monthly_project_profit_list,
+              monthly_project_income_list: monthly_project_income_list,
+              accumulated_profit: accumulated_profit,
+              accumulated_profit_list: accumulated_profit_list}
   }
   
   generate_pbp_v2(market_price_usd_delta = 0, hash_rate_delta = 0) {
@@ -190,7 +211,7 @@ class MeatzeFigures {
       var month_hash_rate_delta = 100 + hash_rate_delta * month;
       let output = 
         this.generate_monthly_project_profit(month_market_price_usd_delta, 
-                                            month_hash_rate_delta)
+                                              month_hash_rate_delta)
 
         // Check accumulated profit
         monthly_project_profit_list.push(output.profit)
@@ -203,8 +224,9 @@ class MeatzeFigures {
         if( month_profit_positive > 12 ) break;
     }
 
-    return { pbp: pbp, monthly_project_profit_list: monthly_project_profit_list, 
-            monthly_project_income_list: monthly_project_income_list,
+    return { pbp: pbp, monthly_project_profit: 0,
+              monthly_project_profit_list: monthly_project_profit_list, 
+              monthly_project_income_list: monthly_project_income_list,
               accumulated_profit: accumulated_profit, accumulated_profit_list: accumulated_profit_list }
   }
   
