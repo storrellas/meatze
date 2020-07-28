@@ -483,13 +483,7 @@
         return;
       }
 
-      // Expected PBP
-      if( config.pbp < 0 ){
-        $(".alert-pbp ").removeClass('invisible')
-        $('#pbp').val('')
-        return;
-      } 
-
+      // Set optimal text
       const optimal_text = `Optimal Configuration: SERVER=${optimal_config.server} / CONTAINER=${optimal_config.container}`
       $('.alert-optimal').text(optimal_text)
 
@@ -542,7 +536,7 @@
 
       // Genearte configuration
       $('.alert-optimal span').text("Calculating outputs ");
-      await calculate_output_figures();
+      await calculate_optimal_output_figures();
     }
 
     let config_list = []
