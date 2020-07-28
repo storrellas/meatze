@@ -289,7 +289,7 @@
       pessimistic  : { market_price_usd_delta: 3,  hash_rate_delta: 6 },
       conservative : { market_price_usd_delta: 5,  hash_rate_delta: 5 },
       slightly     : { market_price_usd_delta: 8,  hash_rate_delta: 5 },
-      optmistic    : { market_price_usd_delta: 15, hash_rate_delta: 10 }
+      optimistic    : { market_price_usd_delta: 15, hash_rate_delta: 10 }
     }
 
     // Meatze Firebase
@@ -482,7 +482,7 @@
       console.log("------------------")
       console.log(" find_optimal_config ")
       console.log("------------------")
-      
+      /*
       // Iterate configurations and find optimal
       let optimal_pbp = undefined;
       let optimal_config = undefined;
@@ -533,8 +533,8 @@
       let hash_rate_delta = SCENARIO_LIST[scenario_selected].hash_rate_delta;
 
       // Fake 
-      market_price_usd_delta = 0;
-      hash_rate_delta = 0;
+      // market_price_usd_delta = 0;
+      // hash_rate_delta = 0;
 
       // Calculate figures per month
       let config_list_2 = [];
@@ -561,10 +561,10 @@
       // Find optimal
       let optimal_config_2 = config_list_2[0]
       for( const config of config_list_2 ){
-        if( config.pbp < optimal_config.pbp ){
+        if( config.pbp < optimal_config_2.pbp ){
           optimal_config_2 = config;
-        }else if (config.pbp == optimal_config.pbp &&
-                    config.accumulated_profit > optimal_config.accumulated_profit){
+        }else if (config.pbp == optimal_config_2.pbp &&
+                    config.accumulated_profit > optimal_config_2.accumulated_profit){
           optimal_config_2 = config;
         }
       }
