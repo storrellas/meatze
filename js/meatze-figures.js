@@ -8,6 +8,35 @@ const CAPEX_CONTAINER_FACTOR = {
 }
 
 
+const project_size = $('#project-size').val()
+const electricity_cost = $('#electricity-cost').val()
+const yearly_operation_hours = $('#yearly-hours').val()
+
+class MeatzeInput{
+  constructor(project_size, electricity_cost, yearly_operation_hours, 
+              server_type, container_type, 
+              market_price_usd, hash_rate,
+              market_price_usd_delta = 0, hash_rate_delta = 0){
+    // User inputs
+    this.project_size = project_size;
+    this.electricity_cost = electricity_cost;
+    this.yearly_operation_hours = yearly_operation_hours;
+
+    // Server type / Container Type
+    this.server_type = server_type;
+    this.container_type = container_type;
+
+    // Constraints
+    this.market_price_usd = market_price_usd;
+    this.hash_rate = hash_rate;
+
+    // Scenario
+    this.market_price_usd_delta = market_price_usd_delta;
+    this.hash_rate_delta = hash_rate_delta;
+  }
+}
+
+
 class MeatzeFigures {
   constructor(server_type_list) {
     this.server_type_list = server_type_list;
@@ -112,7 +141,7 @@ class MeatzeFigures {
     return {income: this.monthly_project_income, profit: this.monthly_project_profit};
   }
 
-  generate_pbp(market_price_usd_delta = 100, hash_rate_delta = 100) {
+  generate_pbp() {
     
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
@@ -123,6 +152,8 @@ class MeatzeFigures {
       return {value: this.pbp, monthly_project_profit: this.monthly_project_profit};
     }
   
+    const market_price_usd_delta = 100;
+    const hash_rate_delta = 100;
     // Calculate monthtly project profit
     const output = 
       this.generate_monthly_project_profit(market_price_usd_delta, hash_rate_delta)

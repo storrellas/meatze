@@ -313,6 +313,7 @@
     // -----
     // Generates figures
     // -----
+    /*
     const generate_figures = (server_type, container_type,
                               market_price_usd_delta = 100, hash_rate_delta = 100) => {
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
@@ -332,7 +333,28 @@
       $(".alert-pbp ").addClass('invisible')
       const capex = meatze_figures.generate_capex()
       const opex_monthly = meatze_figures.generate_opex_monthly();
-      const pbp = meatze_figures.generate_pbp(market_price_usd_delta, hash_rate_delta)
+      const pbp = meatze_figures.generate_pbp()
+
+      return { capex_server: capex.server, capex_project: capex.project, 
+              opex_monthly: opex_monthly, pbp: pbp.value, monthly_project_profit: pbp.monthly_project_profit }
+    }
+    /**/
+
+
+    const generate_figures_v1 = (meatze_input) => {
+      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
+
+      // Set Configuration
+      meatze_figures.set_configuration(meatze_input.server_type, meatze_input.container_type)
+
+      // Set input / scenario
+      meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
+      meatze_figures.set_scenario(meatze_input.market_price_usd, meatze_input.hash_rate)
+
+      $(".alert-pbp ").addClass('invisible')
+      const capex = meatze_figures.generate_capex()
+      const opex_monthly = meatze_figures.generate_opex_monthly();
+      const pbp = meatze_figures.generate_pbp()
 
       return { capex_server: capex.server, capex_project: capex.project, 
               opex_monthly: opex_monthly, pbp: pbp.value, monthly_project_profit: pbp.monthly_project_profit }
@@ -499,18 +521,27 @@
       // Iterate configurations and find optimal
       let optimal_pbp = undefined;
       let optimal_config = undefined;
-      config_list = []
+      let config_list = []
 
       
       for(const container in CAPEX_CONTAINER ) { // Iterate on containers
 
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
 
-          const output = generate_figures(server, container)
+
+          // Grab inputs
+          const project_size = $('#project-size').val()
+          const electricity_cost = $('#electricity-cost').val()
+          const yearly_operation_hours = $('#yearly-hours').val()
+          const meatze_input = new MeatzeInput(project_size, electricity_cost, yearly_operation_hours,
+                                                server, container,
+                                                market_price_usd, hash_rate)
+
+          const output = generate_figures_v1(meatze_input)
+          //const output = generate_figures(server, container)
           const config = {
             server: server, container: container, ...output
           }
-
           // Grab lowest PBP
           if( optimal_pbp === undefined ){
             optimal_pbp = output.pbp.value;
@@ -524,21 +555,25 @@
           config_list.push(config)
         }
       }
-      console.log("config_list ", config_list)
+      console.log("config_list1", config_list)
       console.log("optimal_config ", optimal_config)
 
       /**/
       //////////////////////////////////////////
       
-      /*
+
+
       // Determine scenario
       const scenario_selected = $('#scenario-type').val();
       let market_price_usd_delta = SCENARIO_LIST[scenario_selected].market_price_usd_delta;
       let hash_rate_delta = SCENARIO_LIST[scenario_selected].hash_rate_delta;
 
+      // Fake 
+      market_price_usd_delta = 0;
+      hash_rate_delta = 0;
 
       // Calculate figures per month
-      let config_list = [];
+      config_list = [];
       for(const container in CAPEX_CONTAINER ) { // Iterate on containers
         for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
           const figures = generate_figures_v2(server, container, 
@@ -549,6 +584,9 @@
         }
       }
       
+      console.log("config_list2", config_list)
+
+      /*
       // Find optimal
       let optimal_config = config_list[0]
       for( const config of config_list ){
@@ -717,7 +755,8 @@
       // chart_list2 = generatechartData2()
 
       // Add data
-      chart.data = generatechartData();
+      //chart.data = generatechartData();
+      chart.data = [];
 
 
       // Create axes
