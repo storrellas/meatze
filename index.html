@@ -419,34 +419,11 @@
       chart.data = chart_data_list
       /**/
       
-      console.log( "config ... ", config )
+      console.log( "... rendering config ... ", config )
       
 
       // Version1
       // -------------------
-      // // Calculate evolution
-      // let row_list = ""
-      // let accumulated_profit_list = []
-      // let positive_values = 10;
-      // if( config.monthly_project_profit > 0 ){
-      //   let accumulated_profit = 0;
-      //   let i = 0;
-      //   do {
-      //     const date = new Date();  
-      //     date.setDate(1);
-      //     date.setMonth( date.getMonth() + i );  
-      //     // Calcualte accumulated income
-      //     accumulated_profit = - config.capex_project + config.monthly_project_profit * i
-      //     accumulated_profit_list.push({date: date, value: accumulated_profit})
-
-      //     i++;
-      //     if( i > 100 ) break; 
-      //     if( accumulated_profit > 0 ){
-      //       positive_values = positive_values - 1;
-      //     }
-      //   } while(accumulated_profit < 0 || positive_values > 0) ;
-      // }
-
 
       // Set results in table
       let row_list = ""
@@ -458,14 +435,14 @@
                             </tr>`;
       $('#result-table tbody').empty()
       if(config.pbp !== undefined && config.pbp > 0 ){
-        for( let i = 0; i < config.accumulated_profit_list.length; i++){
+        for( let i = 0; i < config.evolution.length; i++){
           const date = new Date();  
           date.setMonth( date.getMonth() + i );  
           const month = date.toLocaleString('en-US', { month: 'long' });
           const row = template_row.format( month, 
-                                      config.monthly_project_profit_list[i],
+                                      config.evolution[i].profit,
                                       config.opex_monthly, 
-                                      config.accumulated_profit_list[i])
+                                      config.evolution[i].accumulated)
           row_list +=  row 
           if( i > 12 ){
             row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
@@ -480,22 +457,15 @@
 
       // Generate chart data
       const chart_data_list = []
-      for(let i = 0; i < config.accumulated_profit_list.length; i++){
+      for(let i = 0; i < config.evolution.length; i++){
 
         const date = new Date();  // 2009-11-10
         date.setDate(1);
         date.setMonth( date.getMonth() + i );  
-        console.log(i, date)
 
-        chart_data_list.push( { date:date, value: config.accumulated_profit_list[i]})
+        chart_data_list.push( { date:date, value: config.evolution[i].accumulated})
       }
 
-      // --- Chart --
-      console.log(" --- chart ---")
-      //console.log(accumulated_profit_list)
-      console.log(chart_data_list)
-      console.log(" --- chart ---")
-      // --- Chart --
 
       chart.data = chart_data_list
       //chart.data = generatechartData()
@@ -512,7 +482,7 @@
       console.log("------------------")
       console.log(" find_optimal_config ")
       console.log("------------------")
-
+      
       // Iterate configurations and find optimal
       let optimal_pbp = undefined;
       let optimal_config = undefined;
@@ -603,6 +573,9 @@
       console.log("optimal_config_2", optimal_config_2)
       /**/
       // --------------------------
+
+      config_list = config_list_2;
+      optimal_config = optimal_config_2;
 
       return optimal_config;
     }
@@ -697,54 +670,54 @@
     let chart = null;
 
 // -------------------------------------------
-    function generatechartData() {
-      var chartData = [];
-      var firstDate = new Date();
-      firstDate.setDate(firstDate.getDate() - 150);
-      var visits = -40;
-      var b = 0.6;
-      for (var i = 0; i < 150; i++) {
-        // we create date objects here. In your data, you can have date strings
-        // and then set format of your dates using chart.dataDateFormat property,
-        // however when possible, use date objects, as this will speed up chart rendering.
-        var newDate = new Date(firstDate);
-        newDate.setDate(newDate.getDate() + i);
-        if (i > 80) {
-          b = 0.4;
-        }
-        visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    // function generatechartData() {
+    //   var chartData = [];
+    //   var firstDate = new Date();
+    //   firstDate.setDate(firstDate.getDate() - 150);
+    //   var visits = -40;
+    //   var b = 0.6;
+    //   for (var i = 0; i < 150; i++) {
+    //     // we create date objects here. In your data, you can have date strings
+    //     // and then set format of your dates using chart.dataDateFormat property,
+    //     // however when possible, use date objects, as this will speed up chart rendering.
+    //     var newDate = new Date(firstDate);
+    //     newDate.setDate(newDate.getDate() + i);
+    //     if (i > 80) {
+    //       b = 0.4;
+    //     }
+    //     visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
 
-        chartData.push({
-          date: newDate,
-          value: visits
-        });
-      }
-      console.log( chartData )
-      return chartData;
-    }
+    //     chartData.push({
+    //       date: newDate,
+    //       value: visits
+    //     });
+    //   }
+    //   console.log( chartData )
+    //   return chartData;
+    // }
 
-    function generatechartData2(){
-      var accumulated_income_list =[]
-      var capex_project = 1000;
-      var monthly_project_profit = 30;
-      let accumulated_income = 0;
+    // function generatechartData2(){
+    //   var accumulated_income_list =[]
+    //   var capex_project = 1000;
+    //   var monthly_project_profit = 30;
+    //   let accumulated_income = 0;
 
-      // Iterate evolution
-      let i = 0;
-      do{
-        i++;
-        const date = new Date();  // 2009-11-10
-        date.setMonth( date.getMonth() + i );          
-        // Calcualte accumulated income
-        accumulated_income = - capex_project + monthly_project_profit * i
-        accumulated_income_list.push({date: date, value: accumulated_income})
+    //   // Iterate evolution
+    //   let i = 0;
+    //   do{
+    //     i++;
+    //     const date = new Date();  // 2009-11-10
+    //     date.setMonth( date.getMonth() + i );          
+    //     // Calcualte accumulated income
+    //     accumulated_income = - capex_project + monthly_project_profit * i
+    //     accumulated_income_list.push({date: date, value: accumulated_income})
         
-        if( i > 100 ) break;        
-      }while(accumulated_income < 0 );
+    //     if( i > 100 ) break;        
+    //   }while(accumulated_income < 0 );
 
-      console.log( accumulated_income_list )
-      return accumulated_income_list;
-    }
+    //   console.log( accumulated_income_list )
+    //   return accumulated_income_list;
+    // }
 // -------------------------------------------
 
     am4core.ready(function () {

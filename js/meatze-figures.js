@@ -36,7 +36,6 @@ class MeatzeInput{
   }
 }
 
-
 class MeatzeFigures {
   constructor(server_type_list) {
     this.server_type_list = server_type_list;
@@ -146,6 +145,7 @@ class MeatzeFigures {
     // Monthly OPEX
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
+        
         this.yearly_operation_hours.length == 0) {
       this.pbp = 0;
       this.monthly_project_profit = 0;
@@ -169,6 +169,7 @@ class MeatzeFigures {
     let accumulated_profit = - this.generate_capex().project;
     let accumulated_profit_list = [accumulated_profit];
     let month_profit_positive = 0;
+    let evolution = []
     for(month = 0; month < 100; month++){
       
         // Check accumulated profit
@@ -176,16 +177,21 @@ class MeatzeFigures {
         monthly_project_income_list.push(output.income)
         accumulated_profit += output.profit;
         accumulated_profit_list.push(accumulated_profit)
+
+
+        evolution.push( {profit: output.profit, income: output.income, accumulated: accumulated_profit})
         if( accumulated_profit > 0 ) month_profit_positive++;
         if( month_profit_positive > 12 ) break;
     }
 
 
-    return { pbp: this.pbp, monthly_project_profit: this.monthly_project_profit,
+    return { pbp: this.pbp, 
+              monthly_project_profit: this.monthly_project_profit,
               monthly_project_profit_list: monthly_project_profit_list,
               monthly_project_income_list: monthly_project_income_list,
               accumulated_profit: accumulated_profit,
-              accumulated_profit_list: accumulated_profit_list}
+              accumulated_profit_list: accumulated_profit_list,
+              evolution: evolution}
   }
   
   generate_pbp_v2(market_price_usd_delta = 0, hash_rate_delta = 0) {
@@ -206,6 +212,7 @@ class MeatzeFigures {
     let accumulated_profit = - this.generate_capex().project
     let accumulated_profit_list = [accumulated_profit]    
     let month_profit_positive = 0;
+    let evolution = [{profit: 0, income: 0, accumulated: accumulated_profit}]
     for(month = 0; month < 100; month++){
       var month_market_price_usd_delta = 100 + market_price_usd_delta * month;
       var month_hash_rate_delta = 100 + hash_rate_delta * month;
@@ -218,16 +225,20 @@ class MeatzeFigures {
         monthly_project_income_list.push(output.income)
         accumulated_profit += output.profit;
         accumulated_profit_list.push(accumulated_profit)
+
+        evolution.push( {profit: output.profit, income: output.income, accumulated: accumulated_profit})
         if( accumulated_profit > 0 ) month_profit_positive++;
         if( pbp === undefined && accumulated_profit > 0 ) pbp = month;
 
         if( month_profit_positive > 12 ) break;
     }
 
-    return { pbp: pbp, monthly_project_profit: 0,
+    return { pbp: pbp, 
+              monthly_project_profit: 0,
               monthly_project_profit_list: monthly_project_profit_list, 
               monthly_project_income_list: monthly_project_income_list,
-              accumulated_profit: accumulated_profit, accumulated_profit_list: accumulated_profit_list }
+              accumulated_profit: accumulated_profit, accumulated_profit_list: accumulated_profit_list,
+              evolution: evolution }
   }
   
 }
