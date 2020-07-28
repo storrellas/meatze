@@ -143,7 +143,6 @@ class MeatzeFigures {
   
   generate_pbp(market_price_usd_delta = 0, hash_rate_delta = 0) {
     
-
     // Preconditions
     if( this.electricity_cost.length == 0 || 
         this.project_size.length == 0 ||
@@ -154,10 +153,7 @@ class MeatzeFigures {
     // Calculate monthtly project profit
     let month = 0
     let pbp = undefined;
-    let monthly_project_profit_list = [0];
-    let monthly_project_income_list = [0];
     let accumulated_profit = - this.generate_capex().project
-    let accumulated_profit_list = [accumulated_profit]    
     let month_profit_positive = 0;
     let evolution = [{profit: 0, income: 0, accumulated: accumulated_profit}]
     for(month = 0; month < 100; month++){
@@ -168,10 +164,7 @@ class MeatzeFigures {
                                               month_hash_rate_delta)
 
         // Check accumulated profit
-        monthly_project_profit_list.push(output.profit)
-        monthly_project_income_list.push(output.income)
         accumulated_profit += output.profit;
-        accumulated_profit_list.push(accumulated_profit)
 
         evolution.push( {profit: output.profit, income: output.income, accumulated: accumulated_profit})
         if( accumulated_profit > 0 ) month_profit_positive++;
@@ -181,10 +174,6 @@ class MeatzeFigures {
     }
 
     return { pbp: pbp, 
-              // monthly_project_profit: 0,
-              // monthly_project_profit_list: monthly_project_profit_list, 
-              // monthly_project_income_list: monthly_project_income_list,
-              // accumulated_profit_list: accumulated_profit_list,
               accumulated_profit: accumulated_profit, 
               evolution: evolution }
   }
