@@ -155,6 +155,7 @@ class MeatzeFigures {
     let pbp = undefined;
     let accumulated_profit = - this.generate_capex().project
     let month_profit_positive = 0;
+    let first_accumulated_profit = undefined;
     let evolution = [{profit: 0, income: 0, accumulated: accumulated_profit}]
     for(month = 0; month < 100; month++){
       var month_market_price_usd_delta = 100 + market_price_usd_delta * month;
@@ -167,13 +168,21 @@ class MeatzeFigures {
         accumulated_profit += output.profit;
 
         evolution.push( {profit: output.profit, income: output.income, accumulated: accumulated_profit})
-        if( accumulated_profit > 0 ) month_profit_positive++;
+        if( accumulated_profit > 0 ) {
+          month_profit_positive++;
+          // copy first accumulated profit
+          if( first_accumulated_profit == undefined ) {
+            first_accumulated_profit = accumulated_profit;
+          } 
+        }
+        
         if( pbp === undefined && accumulated_profit > 0 ) pbp = month;
 
         if( month_profit_positive > 12 ) break;
     }
 
     return { pbp: pbp, 
+              first_accumulated_profit: first_accumulated_profit, 
               accumulated_profit: accumulated_profit, 
               evolution: evolution }
   }

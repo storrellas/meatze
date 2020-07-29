@@ -439,22 +439,22 @@
                                                 server, container,
                                                 market_price_usd, hash_rate,
                                                 market_price_usd_delta, hash_rate_delta)
-
+          // Generate figures
           const figures = generate_figures(meatze_input)
-
-          if( figures.accumulated_profit > 0 ){
+          if( figures.first_accumulated_profit > 0 ){
             config_list.push({server: server, container: container, ...figures})
           }
         }
       }
       
+
       // Find optimal
       let optimal_config = config_list[0]
       for( const config of config_list ){
         if( config.pbp < optimal_config.pbp ){
           optimal_config = config;
         }else if (config.pbp == optimal_config.pbp &&
-                    config.first_positive_profit > optimal_config.first_positive_profit){
+                    config.first_accumulated_profit > optimal_config.first_accumulated_profit){
           optimal_config = config;
         }
       }
