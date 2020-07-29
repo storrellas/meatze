@@ -24,11 +24,18 @@ const SERVER_TYPE_LIST_DEFAULT = {
   S9: { price: 53.5, hashing: 10, consumption: 0.72 },
   S19: { price: 2160, hashing: 95, consumption: 3.3 },
 }
+const SCENARIO_LIST_DEFAULT = {
+  pessimistic  : { market_price_usd_delta: 3,  hash_rate_delta: 6 },
+  conservative : { market_price_usd_delta: 5,  hash_rate_delta: 5 },
+  slightly     : { market_price_usd_delta: 8,  hash_rate_delta: 5 },
+  optimistic    : { market_price_usd_delta: 15, hash_rate_delta: 10 }
+}
 //let SERVER_TYPE_LIST = Object.assign({}, SERVER_TYPE_LIST_DEFAULT)
 
 class MeatzeFirebase {
-  constructor(collection_name) {
-    this.collection_name = collection_name;
+  constructor(collection_server_type_name, collection_scenario_name) {
+    this.collection_server_type_name = collection_server_type_name;
+    this.collection_scenario_name = collection_scenario_name;
 
     this.email = 'sergi@meatze.com'
     this.password = 'meatze'
@@ -52,14 +59,24 @@ class MeatzeFirebase {
   }
   
   async reset(){
+    // SERVER TYPE LIST
     for (const item in SERVER_TYPE_LIST_DEFAULT) {
-        console.log("Reset Configuration -> ", collection_name, item)
-  
+        console.log("Reset ServerType Configuration -> ", this.collection_server_type_name, item)
         // Delete document
-        await db.collection(collection_name).doc(item).delete()
+        await db.collection(this.collection_server_type_name).doc(item).delete()
         // Add new default document
-        await db.collection(collection_name).doc(item).set(SERVER_TYPE_LIST_DEFAULT[item])
+        await db.collection(this.collection_server_type_name).doc(item).set(SERVER_TYPE_LIST_DEFAULT[item])
     }
+
+    // SCENARIO LIST
+    for (const item in SCENARIO_LIST_DEFAULT) {
+      console.log("Reset Scenario Configuration -> ", this.collection_scenario_name, item)
+      // Delete document
+      await db.collection(this.collection_scenario_name).doc(item).delete()
+      // Add new default document
+      await db.collection(this.collection_scenario_name).doc(item).set(SCENARIO_LIST_DEFAULT[item])
+    } 
+
     return SERVER_TYPE_LIST_DEFAULT
   }
 
@@ -67,7 +84,7 @@ class MeatzeFirebase {
     this.server_type_list = server_type_list;
     for (const item in server_type_list) {
         //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
-        db.collection(collection_name).doc(item).set(server_type_list[item])
+        db.collection(this.collection_server_type_name).doc(item).set(server_type_list[item])
             .then(function (docRef) {
                 console.log("Set document ok")
             })
@@ -79,8 +96,8 @@ class MeatzeFirebase {
 
 
   async get() {
-    return new Promise( (resolve, reject) => {
-      db.collection( collection_name )
+    return new Promise( async (resolve, reject) => {
+      db.collection( this.collection_server_type_name )
         .orderBy(firebase.firestore.FieldPath.documentId()).get()
         .then( (querySnapshot) => {
 
@@ -89,7 +106,7 @@ class MeatzeFirebase {
               // doc.data() is never undefined for query doc snapshots
               this.server_type_list[doc.id] = doc.data()
           });
-          return resolve(this.server_type_list)
+          return resolve({server: this.server_type_list, })
 
         })
         .catch( (error) => {

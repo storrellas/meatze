@@ -293,7 +293,7 @@
     }
 
     // Meatze Firebase
-    const meatze_firebase = new MeatzeFirebase( "config" )
+    const meatze_firebase = new MeatzeFirebase( "server", "scenario" )
 
     const fill_configurations = async () => {
 
@@ -419,9 +419,9 @@
                                                 market_price_usd_delta, hash_rate_delta)
           // Generate figures
           const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list, meatze_input)
-          const figures = meatze_figures.generate_figures()
+          const meatze_output = meatze_figures.generate_figures()
           if( figures.first_accumulated_profit > 0 ){
-            config_list.push({...figures})
+            config_list.push({...meatze_output})
           }
         }
       }

@@ -48,8 +48,11 @@
             </div>
             <hr>
             <div class="row text-center mt-3">
-                <div class="col-md-12">
-                    <textarea class="textarea-config" style="width: 100%; font-family: consolas" rows="10"></textarea>
+                <div class="col-md-6">
+                    <textarea class="textarea-server" style="width: 100%; font-family: consolas" rows="10"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <textarea class="textarea-scenario" style="width: 100%; font-family: consolas" rows="10"></textarea>
                 </div>
             </div>
             <div class="row text-center mt-3">
@@ -90,15 +93,15 @@
     <script type="text/javascript">
 
         // Meatze Firebase
-        const meatze_firebase = new MeatzeFirebase( "config" )
+        const meatze_firebase = new MeatzeFirebase( "server", "scenario" )
 
         const initialise = async () => {
             try{
                 await meatze_firebase.authenticate()
                 const result = await meatze_firebase.get();
-                $('.textarea-config').val(JSON.stringify(result, null, 4))
+                $('.textarea-server').val(JSON.stringify(result, null, 4))
             }catch(e){
-                $('.textarea-config').val(JSON.stringify(e, null, 4))
+                $('.textarea-server').val(JSON.stringify(e, null, 4))
                 console.log(e)
             }
         }
@@ -112,17 +115,17 @@
             $('.btn-reset').click( () => {
                 meatze_firebase.reset() 
                 .then( (result) => {
-                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                    $('.textarea-server').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
                 })
             })
             $('.btn-set').click( () => {
-                const server_type_list = JSON.parse( $('.textarea-config').val() )
+                const server_type_list = JSON.parse( $('.textarea-server').val() )
                 meatze_firebase.set(server_type_list) 
             })
             $('.btn-refresh').click( () => {
                 meatze_firebase.get() 
                 .then( (result) => {
-                    $('.textarea-config').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                    $('.textarea-server').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
                 })
             })
         })
