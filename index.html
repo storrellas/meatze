@@ -319,7 +319,7 @@
       const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
 
       // Set Configuration
-      meatze_figures.set_configuration(meatze_input.server_type, meatze_input.container_type)
+      meatze_figures.set_configuration(meatze_input.server, meatze_input.container)
 
       // Set input / scenario
       meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
@@ -442,7 +442,7 @@
           // Generate figures
           const figures = generate_figures(meatze_input)
           if( figures.first_accumulated_profit > 0 ){
-            config_list.push({server: server, container: container, ...figures})
+            config_list.push({...figures})
           }
         }
       }

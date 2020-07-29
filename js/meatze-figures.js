@@ -14,7 +14,7 @@ const yearly_operation_hours = $('#yearly-hours').val()
 
 class MeatzeInput{
   constructor(project_size, electricity_cost, yearly_operation_hours, 
-              server_type, container_type, 
+              server, container, 
               market_price_usd, hash_rate,
               market_price_usd_delta = 0, hash_rate_delta = 0){
     // User inputs
@@ -23,8 +23,8 @@ class MeatzeInput{
     this.yearly_operation_hours = yearly_operation_hours;
 
     // Server type / Container Type
-    this.server_type = server_type;
-    this.container_type = container_type;
+    this.server = server;
+    this.container = container;
 
     // Constraints
     this.market_price_usd = market_price_usd;
@@ -39,8 +39,8 @@ class MeatzeInput{
 class MeatzeFigures {
   constructor(server_type_list) {
     this.server_type_list = server_type_list;
-    this.server_type = 0;
-    this.container_type = 0;
+    this.server = 0;
+    this.container = 0;
 
     // Input parameters
     this.project_size = 0;
@@ -59,9 +59,9 @@ class MeatzeFigures {
     this.monthly_project_profit = 0;
   }
 
-  set_configuration(server_type, container_type){
-    this.server_type = server_type;
-    this.container_type = container_type;
+  set_configuration(server, container){
+    this.server = server;
+    this.container = container;
   }
 
   set_input(project_size, electricity_cost, yearly_operation_hours, scenario){
@@ -79,12 +79,12 @@ class MeatzeFigures {
   generate_capex() {
 
     // CAPEX Server
-    const server = this.server_type_list[this.server_type];
-    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
+    const server = this.server_type_list[this.server];
+    const factor = CAPEX_CONTAINER_FACTOR[this.container];
     const capex_server = ( 1000 / (server.consumption * factor)  ) * server.price
 
     // CAPEX Project
-    let capex_project = (capex_server + CAPEX_CONTAINER[this.container_type]) * this.project_size
+    let capex_project = (capex_server + CAPEX_CONTAINER[this.container]) * this.project_size
     if( this.project_size.length == 0){
       capex_project = 0;
     }
@@ -120,8 +120,8 @@ class MeatzeFigures {
     }
   
     // Project Hashpower
-    const server = this.server_type_list[this.server_type];
-    const factor = CAPEX_CONTAINER_FACTOR[this.container_type];
+    const server = this.server_type_list[this.server];
+    const factor = CAPEX_CONTAINER_FACTOR[this.container];
     const project_hashpower = ( (1000.0 / server.consumption) * factor) * this.project_size * server.hashing;
   
     // Corrected market_price_usd / hash_rate
@@ -181,7 +181,8 @@ class MeatzeFigures {
         if( month_profit_positive > 12 ) break;
     }
 
-    return { pbp: pbp, 
+    return { server: this.server, container: this.container,
+              pbp: pbp, 
               first_accumulated_profit: first_accumulated_profit, 
               accumulated_profit: accumulated_profit, 
               evolution: evolution }
