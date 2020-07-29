@@ -98,10 +98,6 @@
               <label class="input-group-text" for="inputGroupSelect01">Scenario</label>
             </div>
             <select class="custom-select user-input-data" id="scenario-type">
-              <option value="pessimistic">Pessimistic          -  3% /  6%</option>
-              <option value="conservative">Consevartive         -  5% /  5%</option>
-              <option value="slightly">Slightly Optimistic  -  8% /  5%</option>
-              <option value="optimistic">Optimistic           - 15%	/ 10%</option>
             </select>
           </div>
           <small id="emailHelp" class="form-text text-muted">
@@ -297,10 +293,10 @@
 
     const fill_configurations = async () => {
 
-      const server_type_list = await meatze_firebase.get()              
+      const output = await meatze_firebase.get()              
 
       $("#server-type").empty()
-      for(const server in server_type_list ){ // Iterate on servers
+      for(const server in output.server ){ // Iterate on servers
         $("#server-type").append(new Option(server, server));
       }
       $("#container-type").empty()
@@ -308,6 +304,15 @@
         $("#container-type").append(new Option(container, container));
       }
 
+      $('#scenario-type').empty()
+      for(const scenario in output.scenario ){ // Iterate on containers
+        const scenario_first_uppercase = scenario[0].charAt(0).toUpperCase()+scenario.slice(1);
+        const scenario_obj = output.scenario[scenario]
+        const text = scenario_first_uppercase + " - " + 
+                      scenario_obj.market_price_usd_delta + "% / " + 
+                      scenario_obj.hash_rate_delta + "%";
+        $("#scenario-type").append(new Option(text, scenario));
+      }
     }
 
 
@@ -395,12 +400,12 @@
 
       // Determine scenario
       const scenario_selected = $('#scenario-type').val();
-      let market_price_usd_delta = SCENARIO_LIST[scenario_selected].market_price_usd_delta;
-      let hash_rate_delta = SCENARIO_LIST[scenario_selected].hash_rate_delta;
 
-      // Fake 
-      // market_price_usd_delta = 0;
-      // hash_rate_delta = 0;
+
+      const scenario = meatze_firebase.scenario_list[scenario_selected]
+      let market_price_usd_delta = scenario.market_price_usd_delta;
+      let hash_rate_delta = scenario.hash_rate_delta;
+
 
       $(".alert-pbp ").addClass('invisible')
 
@@ -420,7 +425,7 @@
           // Generate figures
           const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list, meatze_input)
           const meatze_output = meatze_figures.generate_figures()
-          if( figures.first_accumulated_profit > 0 ){
+          if( meatze_output.first_accumulated_profit > 0 ){
             config_list.push({...meatze_output})
           }
         }

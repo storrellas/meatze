@@ -40,6 +40,7 @@ class MeatzeFirebase {
     this.email = 'sergi@meatze.com'
     this.password = 'meatze'
     this.server_type_list = {};
+    this.scenario_list = {};
   }
 
   authenticate(){
@@ -80,41 +81,62 @@ class MeatzeFirebase {
     return SERVER_TYPE_LIST_DEFAULT
   }
 
-  set(server_type_list) {
-    this.server_type_list = server_type_list;
-    for (const item in server_type_list) {
+  async set(server_type_list, scenario_list) {
+    try{
+      this.server_type_list = server_type_list;
+      for (const item in server_type_list) {
+          //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
+          await db.collection(this.collection_server_type_name).doc(item).set(server_type_list[item])
+          console.log("Set server_type", item," ok")
+
+      }
+  
+      this.scenario_list = scenario_list;
+      for (const item in scenario_list) {
         //console.log("Setting Configuration -> ", collection_name, item, SERVER_TYPE_LIST[item])                
-        db.collection(this.collection_server_type_name).doc(item).set(server_type_list[item])
-            .then(function (docRef) {
-                console.log("Set document ok")
-            })
-            .catch(function (error) {
-                console.error("Set document failed ", error);
-            });
+        await db.collection(this.collection_scenario_name).doc(item).set(scenario_list[item])
+        console.log("Set scenario ", item, " ok")
+      }
+    }catch(error){
+      console.error("Set document failed ", error);
+
     }
   }
 
+  async get_single(collection_name) {
+      try{
+        
+        const result = {}
+        // Get Server type
+        let querySnapshot = await db.collection( collection_name )
+                                .orderBy(firebase.firestore.FieldPath.documentId()).get()
+        querySnapshot.forEach((doc) => {
+          // doc.data() is never undefined for query doc snapshots
+          result[doc.id] = doc.data()
+        });
+
+        return result
+      }catch(error){
+        console.log("server_type_list ", this.server_type_list, this.scenario_list)
+        return reject({error: 'Failed to load data', message: error})        
+      }
+
+  }
 
   async get() {
-    return new Promise( async (resolve, reject) => {
-      db.collection( this.collection_server_type_name )
-        .orderBy(firebase.firestore.FieldPath.documentId()).get()
-        .then( (querySnapshot) => {
+      try{
+        this.server_type_list = await this.get_single(this.collection_server_type_name)
+        this.scenario_list = await this.get_single(this.collection_scenario_name)
+        return {server: this.server_type_list, scenario: this.scenario_list}
+      }catch(error){
+        console.log("server_type_list ", this.server_type_list, this.scenario_list)
+        return {error: 'Failed to load data', message: error}
+      }
 
-          // Set results                
-          querySnapshot.forEach((doc) => {
-              // doc.data() is never undefined for query doc snapshots
-              this.server_type_list[doc.id] = doc.data()
-          });
-          return resolve({server: this.server_type_list, })
-
-        })
-        .catch( (error) => {
-          console.log("server_type_list ", this.server_type_list)
-          return reject({error: 'Failed to load data', message: error})
-        })
-    })
+   
   }
+
+
 
 }
 

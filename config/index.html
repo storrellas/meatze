@@ -44,7 +44,7 @@
         <section class="mt-3" style="background-color: #DDDDDD; padding: 10px">
 
             <div class="row col-md-12 mt-3">
-                <h4>Estimator Configuration</h4>
+                <h4>Estimator Configuration <i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i></h4>
             </div>
             <hr>
             <div class="row text-center mt-3">
@@ -63,7 +63,7 @@
                     <button type="button" class="btn btn-set btn-secondary w-100">Set</button>
                 </div>
                 <div class="col-md-4">
-                    <button type="button" class="btn btn-refresh btn-secondary w-100">Get</button>
+                    <button type="button" class="btn btn-get btn-secondary w-100">Get</button>
                 </div>
             </div>
         </section>
@@ -99,7 +99,9 @@
             try{
                 await meatze_firebase.authenticate()
                 const result = await meatze_firebase.get();
-                $('.textarea-server').val(JSON.stringify(result, null, 4))
+                $('.textarea-server').val(JSON.stringify(result.server, null, 4))
+                $('.textarea-scenario').val(JSON.stringify(result.scenario, null, 4))
+                $('.spinner').hide()
             }catch(e){
                 $('.textarea-server').val(JSON.stringify(e, null, 4))
                 console.log(e)
@@ -113,19 +115,32 @@
 
             // Events
             $('.btn-reset').click( () => {
+                $('.spinner').show()
+                $('.textarea-server').val('')
+                $('.textarea-scenario').val('')                
                 meatze_firebase.reset() 
                 .then( (result) => {
                     $('.textarea-server').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                    $('.textarea-scenario').val(JSON.stringify(SCENARIO_LIST_DEFAULT, null, 4))
+                    $('.spinner').hide()
                 })
             })
             $('.btn-set').click( () => {
+                $('.spinner').show()
                 const server_type_list = JSON.parse( $('.textarea-server').val() )
-                meatze_firebase.set(server_type_list) 
+                const scenario_list = JSON.parse( $('.textarea-scenario').val() )
+                meatze_firebase.set(server_type_list, scenario_list) 
+                $('.spinner').hide()
             })
-            $('.btn-refresh').click( () => {
+            $('.btn-get').click( () => {
+                $('.spinner').show()
+                $('.textarea-server').val('')
+                $('.textarea-scenario').val('')
                 meatze_firebase.get() 
                 .then( (result) => {
-                    $('.textarea-server').val(JSON.stringify(SERVER_TYPE_LIST_DEFAULT, null, 4))
+                    $('.textarea-server').val(JSON.stringify(result.server, null, 4))
+                    $('.textarea-scenario').val(JSON.stringify(result.scenario, null, 4))
+                    $('.spinner').hide()
                 })
             })
         })
