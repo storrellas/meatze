@@ -310,28 +310,6 @@
 
     }
 
-    // -----
-    // Generates figures
-    // -----
-
-
-    const generate_figures = (meatze_input) => {
-      const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list)
-
-      // Set Configuration
-      meatze_figures.set_configuration(meatze_input.server, meatze_input.container)
-
-      // Set input / scenario
-      meatze_figures.set_input(meatze_input.project_size, meatze_input.electricity_cost, meatze_input.yearly_operation_hours)
-      meatze_figures.set_scenario(meatze_input.market_price_usd, meatze_input.hash_rate)
-
-      const capex = meatze_figures.generate_capex()
-      const opex_monthly = meatze_figures.generate_opex_monthly();
-      const result_pbp = meatze_figures.generate_pbp(meatze_input.market_price_usd_delta, meatze_input.hash_rate_delta)
-
-      return { capex_server: capex.server, capex_project: capex.project, 
-              opex_monthly: opex_monthly, ...result_pbp }
-    }
 
     // -----
     // Sets the output
@@ -440,7 +418,8 @@
                                                 market_price_usd, hash_rate,
                                                 market_price_usd_delta, hash_rate_delta)
           // Generate figures
-          const figures = generate_figures(meatze_input)
+          const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list, meatze_input)
+          const figures = meatze_figures.generate_figures()
           if( figures.first_accumulated_profit > 0 ){
             config_list.push({...figures})
           }
