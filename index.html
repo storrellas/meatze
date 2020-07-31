@@ -225,7 +225,7 @@
               <th scope="col">Month</th>
               <th scope="col">Montly Income</th>
               <th scope="col">Monthly OPEX</th>
-              <th scope="col">Accumulated Monthly Profit</th>              
+              <th scope="col">Accumulated Monthly Income</th>              
             </tr>
           </thead>
           <tbody class="text-center">
@@ -293,7 +293,7 @@
 
     const fill_configurations = async () => {
 
-      const output = await meatze_firebase.get()              
+      const output = await meatze_firebase.get()
 
       $("#server-type").empty()
       for(const server in output.server ){ // Iterate on servers
@@ -354,7 +354,7 @@
           date.setMonth( date.getMonth() + i );  
           const month = date.toLocaleString('en-US', { month: 'long' });
           const row = template_row.format( month, 
-                                      config.evolution[i].profit,
+                                      config.evolution[i].income,
                                       config.opex_monthly, 
                                       config.evolution[i].accumulated)
           row_list +=  row 
@@ -411,8 +411,11 @@
 
       // Calculate figures per month
       config_list = [];
-      for(const container in CAPEX_CONTAINER ) { // Iterate on containers
-        for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
+      for(const server in meatze_firebase.server_type_list ){ // Iterate on servers        
+        for(const container in CAPEX_CONTAINER ) { // Iterate on containers
+
+          // Do not launch S9 - LiquidCooled
+          if(server == "S9" && container == "LiquidCooled") continue;
 
           // Grab inputs
           const project_size = $('#project-size').val()
@@ -511,12 +514,9 @@
       await fill_configurations();
 
       // Fake input
-      // $('#project-size').val(1000), 
-      // $('#electricity-cost').val(0.0001), 
-      // $('#yearly-hours').val(8000)
-      $('#project-size').val(5), 
-      $('#electricity-cost').val(0.01), 
-      $('#yearly-hours').val(8600)
+      // $('#project-size').val(5), 
+      // $('#electricity-cost').val(0.01), 
+      // $('#yearly-hours').val(8600)
 
       // Genearte configuration
       $('.alert-optimal span').text("Calculating outputs ");
@@ -530,8 +530,20 @@
       // Initialise UI
       initialise()
       
+      
       $('.user-input-data').on('input', () => calculate_optimal_output_figures() )
       $('.config-input-data').on('change', () => calculate_output_figures() )
+
+      $('#server-type').on('change', (e) => {
+
+        $('#container-type').empty()
+        for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+          // When S9 / LiquidCooled remove LiquidCooled
+          if( $('#server-type').val() == "S9" && container == "LiquidCooled") continue;
+          // Add option
+          $("#container-type").append(new Option(container, container));
+        }
+      })
 
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {
