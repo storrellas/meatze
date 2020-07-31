@@ -315,6 +315,15 @@
       }
     }
 
+    const update_select_container = () => {
+      $('#container-type').empty()
+        for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+          // When S9 / LiquidCooled remove LiquidCooled
+          if( $('#server-type').val() == "S9" && container == "LiquidCooled") continue;
+          // Add option
+          $("#container-type").append(new Option(container, container));
+        }
+    }
 
     // -----
     // Sets the output
@@ -338,6 +347,10 @@
         $('#pbp').val(config.pbp)
       }
 
+      // Server / Container
+      $('#server-type').val(config.server)
+      $('#container-type').val(config.container)
+      update_select_container()
 
       // Set results in table
       let row_list = ""
@@ -526,7 +539,6 @@
     let config_list = []
     $(document).ready( () => {
 
-
       // Initialise UI
       initialise()
       
@@ -534,16 +546,7 @@
       $('.user-input-data').on('input', () => calculate_optimal_output_figures() )
       $('.config-input-data').on('change', () => calculate_output_figures() )
 
-      $('#server-type').on('change', (e) => {
-
-        $('#container-type').empty()
-        for(const container in CAPEX_CONTAINER ){ // Iterate on containers
-          // When S9 / LiquidCooled remove LiquidCooled
-          if( $('#server-type').val() == "S9" && container == "LiquidCooled") continue;
-          // Add option
-          $("#container-type").append(new Option(container, container));
-        }
-      })
+      $('#server-type').on('change', () => update_select_container() )
 
       // Retreive data from blockchain
       axios.get('https://api.blockchain.info/stats') .then( (response) => {
