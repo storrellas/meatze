@@ -37,13 +37,15 @@ class MeatzeFirebase {
     this.collection_server_type_name = collection_server_type_name;
     this.collection_scenario_name = collection_scenario_name;
 
-    this.email = 'sergi@meatze.com'
-    this.password = 'meatze'
+    this.email = ''
+    this.password = ''
     this.server_type_list = {};
     this.scenario_list = {};
   }
 
-  authenticate(){
+  authenticate(email, password){
+    this.email = email;
+    this.password = password;
     return new Promise( (resolve, reject) => {
         firebase.auth().signInWithEmailAndPassword(this.email, this.password)
         .then( () => {

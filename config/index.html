@@ -97,7 +97,9 @@
 
         const initialise = async () => {
             try{
-                await meatze_firebase.authenticate()
+                const email = 'sergi@meatze.com'
+                const password = 'meatze'
+                await meatze_firebase.authenticate(email, password)
                 const result = await meatze_firebase.get();
                 $('.textarea-server').val(JSON.stringify(result.server, null, 4))
                 $('.textarea-scenario').val(JSON.stringify(result.scenario, null, 4))

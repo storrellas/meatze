@@ -294,6 +294,7 @@
     const fill_configurations = async () => {
 
       const output = await meatze_firebase.get()
+      console.log("output ", output)
 
       $("#server-type").empty()
       for(const server in output.server ){ // Iterate on servers
@@ -521,6 +522,10 @@
     }
 
     const initialise = async () => {
+
+      const email = 'dashboard@meatze.com'
+      const password = 'meatze'
+      await meatze_firebase.authenticate(email, password)
 
       // Fill server and container
       $('.alert-optimal span').text("Loading Firebase configuration "); 
