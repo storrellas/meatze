@@ -138,7 +138,10 @@ class MeatzeFirebase {
    
   }
 
-
+  set(server_type_list, scenario_list){
+    this.server_type_list = server_type_list
+    this.scenario_list = scenario_list
+  }
 
 }
 

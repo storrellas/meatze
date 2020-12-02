@@ -335,11 +335,33 @@
 
     const fill_configurations = async () => {
 
-      const output = await meatze_firebase.get()
-      console.log("output ", output)
+      //const output = await meatze_firebase.get()
+
+      // Retrieve machines
+      let response = await axios.get('https://api.meatze.com/api/machine/')
+      const local_server_type_list = {}
+      for(const item of response.data.results){
+        local_server_type_list[item.name] = {
+          consumption: item.consumption,
+          hashing: item.hashing,
+          price: item.price
+        }
+      }
+
+      // Retrieve scenarios
+      response = await axios.get('https://api.meatze.com/api/scenario/')
+      const local_scenario_list = {}
+      for(const item of response.data.results){
+        local_scenario_list[item.name] = {
+          hash_rate_delta: item.hash_rate_delta,
+          market_price_usd_delta: item.market_price_delta
+        }
+      }
+      meatze_firebase.set(local_server_type_list, local_scenario_list)
+
 
       $("#server-type").empty()
-      for(const server in output.server ){ // Iterate on servers
+      for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
         $("#server-type").append(new Option(server, server));
       }
       $("#container-type").empty()
@@ -348,9 +370,9 @@
       }
 
       $('#scenario-type').empty()
-      for(const scenario in output.scenario ){ // Iterate on containers
+      for(const scenario in meatze_firebase.scenario_list ){ // Iterate on containers
         const scenario_first_uppercase = scenario[0].charAt(0).toUpperCase()+scenario.slice(1);
-        const scenario_obj = output.scenario[scenario]
+        const scenario_obj = local_scenario_list[scenario]
         const text = scenario_first_uppercase + " - " + 
                       scenario_obj.market_price_usd_delta + "% / " + 
                       scenario_obj.hash_rate_delta + "%";
