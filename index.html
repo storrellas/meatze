@@ -308,16 +308,8 @@
 
   <!-- Project Scripts -->
   <script src="/js/meatze-figures.js"></script>
-  <script src="/js/meatze-firebase.js"></script>
 
   <script type="text/javascript">
-
-    String.prototype.format = function () {
-      var i = 0, args = arguments;
-      return this.replace(/{}/g, function () {
-        return typeof args[i] != 'undefined' ? args[i++] : '';
-      });
-    };
 
     // Retrieved blockchain
     let market_price_usd = undefined;
@@ -331,17 +323,15 @@
     }
 
     // Meatze Firebase
-    const meatze_firebase = new MeatzeFirebase( "server", "scenario" )
+    const server_type_list = {}
+    const scenario_list = {}
 
     const fill_configurations = async () => {
 
-      //const output = await meatze_firebase.get()
-
       // Retrieve machines
       let response = await axios.get('https://api.meatze.com/api/machine/')
-      const local_server_type_list = {}
       for(const item of response.data.results){
-        local_server_type_list[item.name] = {
+        server_type_list[item.name] = {
           consumption: item.consumption,
           hashing: item.hashing,
           price: item.price
@@ -350,18 +340,16 @@
 
       // Retrieve scenarios
       response = await axios.get('https://api.meatze.com/api/scenario/')
-      const local_scenario_list = {}
       for(const item of response.data.results){
-        local_scenario_list[item.name] = {
+        scenario_list[item.name] = {
           hash_rate_delta: item.hash_rate_delta,
           market_price_usd_delta: item.market_price_delta
         }
       }
-      meatze_firebase.set(local_server_type_list, local_scenario_list)
 
 
       $("#server-type").empty()
-      for(const server in meatze_firebase.server_type_list ){ // Iterate on servers
+      for(const server in server_type_list ){ // Iterate on servers
         $("#server-type").append(new Option(server, server));
       }
       $("#container-type").empty()
@@ -370,9 +358,9 @@
       }
 
       $('#scenario-type').empty()
-      for(const scenario in meatze_firebase.scenario_list ){ // Iterate on containers
+      for(const scenario in scenario_list ){ // Iterate on containers
         const scenario_first_uppercase = scenario[0].charAt(0).toUpperCase()+scenario.slice(1);
-        const scenario_obj = local_scenario_list[scenario]
+        const scenario_obj = scenario_list[scenario]
         const text = scenario_first_uppercase + " - " + 
                       scenario_obj.market_price_usd_delta + "% / " + 
                       scenario_obj.hash_rate_delta + "%";
@@ -419,11 +407,12 @@
 
       // Set results in table
       let row_list = ""
-      const template_row = `<tr>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
+      const template_row = (month, income, opex_monthly, accumulated) => 
+                            `<tr>
+                            <td>${month}</td>
+                            <td>${income}</td>
+                            <td>${opex_monthly}</td>
+                            <td>${accumulated}</td>
                             </tr>`;
       $('#result-table tbody').empty()
       if(config.pbp !== undefined && config.pbp > 0 ){
@@ -431,10 +420,10 @@
           const date = new Date();  
           date.setMonth( date.getMonth() + i );  
           const month = date.toLocaleString('en-US', { month: 'long' });
-          const row = template_row.format( month, 
+          const row = template_row( month, 
                                       config.evolution[i].income,
                                       config.opex_monthly, 
-                                      config.evolution[i].accumulated)
+                                      config.evolution[i].accumulated)          
           row_list +=  row 
           if( i > 12 ){
             row_list += `<tr><td colspan="4" class="text-center">...</td></tr>`
@@ -480,7 +469,7 @@
       const scenario_selected = $('#scenario-type').val();
 
 
-      const scenario = meatze_firebase.scenario_list[scenario_selected]
+      const scenario = scenario_list[scenario_selected]
       let market_price_usd_delta = scenario.market_price_usd_delta;
       let hash_rate_delta = scenario.hash_rate_delta;
 
@@ -489,7 +478,7 @@
 
       // Calculate figures per month
       config_list = [];
-      for(const server in meatze_firebase.server_type_list ){ // Iterate on servers        
+      for(const server in server_type_list ){ // Iterate on servers        
         for(const container in CAPEX_CONTAINER ) { // Iterate on containers
 
           // Do not launch S9 - LiquidCooled
@@ -504,7 +493,7 @@
                                                 market_price_usd, hash_rate,
                                                 market_price_usd_delta, hash_rate_delta)
           // Generate figures
-          const meatze_figures = new MeatzeFigures(meatze_firebase.server_type_list, meatze_input)
+          const meatze_figures = new MeatzeFigures(server_type_list, meatze_input)
           const meatze_output = meatze_figures.generate_figures()
           if( meatze_output.first_accumulated_profit > 0 ){
             config_list.push({...meatze_output})
@@ -578,15 +567,12 @@
       } 
 
       set_output( selected_config )
-
-
     }
 
     const initialise = async () => {
 
       const email = 'dashboard@meatze.com'
       const password = 'meatze'
-      await meatze_firebase.authenticate(email, password)
 
       // Fill server and container
       $('.alert-optimal span').text("Loading Firebase configuration "); 
