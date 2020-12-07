@@ -178,6 +178,12 @@
           </div>
         </div>
 
+        <div class="row mt-3 col-md-12">
+          <div class="alert alert-primary alert-optimal text-center" role="alert" style="width: 100%">
+              
+          </div>
+        </div>
+
         <div class="row mt-3">
             <div class="col-md-3">
               <h5>Parameters</h5>
@@ -217,12 +223,7 @@
         <h4>Project Estimate</h4>
       </div>
       <hr>
-      <div class="row mt-3 col-md-12">
-          <div class="alert alert-primary alert-optimal text-center" role="alert" style="width: 100%">
-              <span>Initialising </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i>
-          </div>
-      </div>
-      
+     
 
       <div class="row mt-3">
 
@@ -302,9 +303,9 @@
   <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
+  <!-- <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script> -->
 
   <!-- Project Scripts -->
   <script src="/js/meatze-figures.js"></script>
@@ -314,6 +315,11 @@
     // Retrieved blockchain
     let market_price_usd = undefined;
     let hash_rate = undefined;
+
+    const banner_initialising = () => `<span>Initialising </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i></span>`
+    const banner_waiting = () => `<span>Please introduce your configuration</span>`
+    const banner_calculating = () => `<span>Calculating </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i></span>`
+    const banner_results = (machine, container) => `<span>Optimal Configuration: SERVER=${machine} / CONTAINER=${container}</span>`
 
     const SCENARIO_LIST = {
       pessimistic  : { market_price_usd_delta: 3,  hash_rate_delta: 6 },
@@ -325,13 +331,15 @@
     // Meatze Firebase
     const server_type_list = {}
     const scenario_list = {}
+    const base_url = 'https://api.meatze.com'
 
     const fill_configurations = async () => {
 
       // Retrieve machines
-      let response = await axios.get('https://api.meatze.com/api/machine/')
+      let response = await axios.get( base_url + '/api/machine/')
       for(const item of response.data.results){
         server_type_list[item.name] = {
+          uuid: item.uuid,
           consumption: item.consumption,
           hashing: item.hashing,
           price: item.price
@@ -339,9 +347,10 @@
       }
 
       // Retrieve scenarios
-      response = await axios.get('https://api.meatze.com/api/scenario/')
+      response = await axios.get(base_url + '/api/scenario/')
       for(const item of response.data.results){
         scenario_list[item.name] = {
+          uuid: item.uuid,
           hash_rate_delta: item.hash_rate_delta,
           market_price_usd_delta: item.market_price_delta
         }
@@ -401,7 +410,7 @@
       }
 
       // Server / Container
-      $('#server-type').val(config.server)
+      $('#server-type').val(config.machine)
       $('#container-type').val(config.container)
       update_select_container()
 
@@ -458,13 +467,35 @@
     // -----
     // Finds the optimal configuration
     // -----
-    const find_optimal_config = () => {
+    const find_optimal_config = async () => {
       
       console.log("------------------")
       console.log(" find_optimal_config ")
       console.log("------------------")
 
 
+
+      const project_size = $('#project-size').val()
+      const electricity_cost = $('#electricity-cost').val()
+      const yearly_operation_hours = $('#yearly-hours').val()
+      const scenario_selected = $('#scenario-type').val();
+      const scenario = scenario_list[scenario_selected]
+
+      console.log("scenario ", scenario)
+
+      // Retrieve effbuckets
+      const body = {
+        scenario: scenario.uuid,
+        project_size: project_size,
+        electricity_cost: electricity_cost,
+        yearly_operation_hours: yearly_operation_hours
+      }
+      const response = await axios.post(base_url + '/api/config/optimal/', body )
+
+      const optimal_config = response.data;
+      return optimal_config
+
+      /*
       // Determine scenario
       const scenario_selected = $('#scenario-type').val();
 
@@ -513,16 +544,21 @@
         }
       }
 
+      console.log("optimal ", optimal_config)
+
       return optimal_config
+      /**/
     }
 
     // -----
     // Calculates the output configuration according to the user input
     // and sets the output
     // -----
-    const calculate_optimal_output_figures = (server_type, container_type) => {
+    const calculate_optimal_output_figures = async (server_type, container_type) => {
       
-      const optimal_config = find_optimal_config()
+      $('.alert-optimal').html( banner_calculating() );
+
+      const optimal_config = await find_optimal_config()
       if( optimal_config === undefined ){
         const optimal_text = `Not found optimal configuration`
         $('.alert-optimal').text(optimal_text)
@@ -535,7 +571,7 @@
       }
 
       // Set optimal text
-      const optimal_text = `Optimal Configuration: SERVER=${optimal_config.server} / CONTAINER=${optimal_config.container}`
+      const optimal_text = `Optimal Configuration: Machine=${optimal_config.machine} / CONTAINER=${optimal_config.container}`
       $('.alert-optimal').text(optimal_text)
 
       // Set configuration
@@ -550,32 +586,58 @@
     // -----
     // Sets the output configuration according to a given configuration
     // -----
-    const calculate_output_figures = () => {
+    const calculate_output_figures = async () => {
 
-      // Set configuration
-      const server_type = $('#server-type').val()
-      const container_type = $('#container-type').val()
+      // --------------------
+      // Config by API
+      const project_size = $('#project-size').val()
+      const electricity_cost = $('#electricity-cost').val()
+      const yearly_operation_hours = $('#yearly-hours').val()
+      const scenario_selected = $('#scenario-type').val();
+      const server_selected = $('#server-type').val();
+      const scenario = scenario_list[scenario_selected]
+      const machine = server_type_list[server_selected]
+      const capex_container = $('#container-type').val()
 
-      const selected_config = config_list.filter( obj => 
-          (obj.server === server_type && obj.container === container_type))[0]
+      // Retrieve effbuckets
+      const body = {
+        scenario: scenario.uuid,
+        machine: machine.uuid,
+        capex_container: capex_container, 
+        project_size: project_size,
+        electricity_cost: electricity_cost,
+        yearly_operation_hours: yearly_operation_hours
+      }
+      const response = await axios.post(base_url + '/api/config/', body )
 
       // Set output
-      if( selected_config == undefined ){
-        const optimal_text = `Not enough data`
-        $('.alert-optimal').text(optimal_text)
-        return;
-      } 
-
+      const selected_config = response.data
       set_output( selected_config )
+      // --------------------
+
+      // // Set configuration
+      // const server_type = $('#server-type').val()
+      // const container_type = $('#container-type').val()
+
+      // const selected_config = config_list.filter( obj => 
+      //     (obj.server === server_type && obj.container === container_type))[0]
+
+      // // Set output
+      // if( selected_config == undefined ){
+      //   const optimal_text = `Not enough data`
+      //   $('.alert-optimal').text(optimal_text)
+      //   return;
+      // } 
+
+      // set_output( selected_config )
     }
 
     const initialise = async () => {
 
-      const email = 'dashboard@meatze.com'
-      const password = 'meatze'
 
       // Fill server and container
-      $('.alert-optimal span').text("Loading Firebase configuration "); 
+      $('.alert-optimal').html( banner_initialising() )
+      
       await fill_configurations();
 
       // Fake input
@@ -584,12 +646,29 @@
       // $('#yearly-hours').val(8600)
 
       // Genearte configuration
-      $('.alert-optimal span').text("Calculating outputs ");
-      await calculate_optimal_output_figures();
+      $('.alert-optimal').html( banner_waiting() );
+      //await calculate_optimal_output_figures();
     }
+
+    let typing_timer;
+    const completed_typing_interval = 3000;
+
 
     let config_list = []
     $(document).ready( () => {
+
+      // -------------------------
+      $('.user-input-data').on('keyup', () => {
+        console.log("Typing event")
+        clearTimeout(typing_timer);
+        typing_timer = setTimeout(calculate_optimal_output_figures, completed_typing_interval);
+      })
+      $('.user-input-data').on('keydown', function () {
+        console.log("T")
+        //clearTimeout(typing_timer);
+      });
+      // -------------------------
+
 
       // Retrieve effbuckets
       axios({
@@ -647,22 +726,22 @@
 
       // Initialise UI
       initialise()
-      
-      
-      $('.user-input-data').on('input', () => calculate_optimal_output_figures() )
+      /*
+      // User input is changing
+      //$('.user-input-data').on('input', () => calculate_optimal_output_figures() )
+      // Manual machine launching
       $('.config-input-data').on('change', () => calculate_output_figures() )
-
       $('#server-type').on('change', () => update_select_container() )
 
       // Retreive data from blockchain
-      axios.get('https://api.blockchain.info/stats') .then( (response) => {
+      axios.get('https://api.blockchain.info/stats').then( (response) => {
         market_price_usd = response.data.market_price_usd;
         hash_rate = response.data.hash_rate / 1000;
         $('#market-price-usd').val(market_price_usd)
         $('#hash-rate').val(hash_rate)
       })
 
-
+      /**/
 
     })
 
