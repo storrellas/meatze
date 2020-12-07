@@ -102,7 +102,7 @@
       <div class="row mt-3">
         <div class="col-md-4 input-group mb-3">
           <div class="input-group">
-            <input type="text" class="form-control user-input-data" id="project-size" placeholder="Project Size" aria-label="Project Size"
+            <input type="number" class="form-control user-input-data" id="project-size" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">MW</span>
@@ -112,7 +112,7 @@
         </div>
         <div class="col-md-4 input-group mb-3">
           <div class="input-group">
-            <input type="text" class="form-control user-input-data" id="electricity-cost" placeholder="Electricity cost in kwh"
+            <input type="number" class="form-control user-input-data" id="electricity-cost" placeholder="Electricity cost in kwh"
               aria-label="Electricity cost in kwh" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">$/kwh</span>
@@ -123,7 +123,7 @@
         <div class="col-md-4 input-group mb-3">
     
           <div class="input-group">
-            <input type="text" class="form-control user-input-data" id="yearly-hours" placeholder="Yearly hours of operation"
+            <input type="number" class="form-control user-input-data" id="yearly-hours" placeholder="Yearly hours of operation"
               aria-label="Yearly hours of operation" aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">hours</span>
@@ -302,11 +302,6 @@
   <script src="https://www.amcharts.com/lib/4/charts.js"></script>
   <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
-  <!-- Firebase -->
-  <!-- <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script> -->
-
   <!-- Project Scripts -->
   <script src="/js/meatze-figures.js"></script>
 
@@ -473,15 +468,11 @@
       console.log(" find_optimal_config ")
       console.log("------------------")
 
-
-
       const project_size = $('#project-size').val()
       const electricity_cost = $('#electricity-cost').val()
       const yearly_operation_hours = $('#yearly-hours').val()
       const scenario_selected = $('#scenario-type').val();
       const scenario = scenario_list[scenario_selected]
-
-      console.log("scenario ", scenario)
 
       // Retrieve effbuckets
       const body = {
@@ -494,60 +485,6 @@
 
       const optimal_config = response.data;
       return optimal_config
-
-      /*
-      // Determine scenario
-      const scenario_selected = $('#scenario-type').val();
-
-
-      const scenario = scenario_list[scenario_selected]
-      let market_price_usd_delta = scenario.market_price_usd_delta;
-      let hash_rate_delta = scenario.hash_rate_delta;
-
-
-      $(".alert-pbp ").addClass('invisible')
-
-      // Calculate figures per month
-      config_list = [];
-      for(const server in server_type_list ){ // Iterate on servers        
-        for(const container in CAPEX_CONTAINER ) { // Iterate on containers
-
-          // Do not launch S9 - LiquidCooled
-          if(server == "S9" && container == "LiquidCooled") continue;
-
-          // Grab inputs
-          const project_size = $('#project-size').val()
-          const electricity_cost = $('#electricity-cost').val()
-          const yearly_operation_hours = $('#yearly-hours').val()
-          const meatze_input = new MeatzeInput(project_size, electricity_cost, yearly_operation_hours,
-                                                server, container,
-                                                market_price_usd, hash_rate,
-                                                market_price_usd_delta, hash_rate_delta)
-          // Generate figures
-          const meatze_figures = new MeatzeFigures(server_type_list, meatze_input)
-          const meatze_output = meatze_figures.generate_figures()
-          if( meatze_output.first_accumulated_profit > 0 ){
-            config_list.push({...meatze_output})
-          }
-        }
-      }
-      
-
-      // Find optimal
-      let optimal_config = config_list[0]
-      for( const config of config_list ){
-        if( config.pbp < optimal_config.pbp ){
-          optimal_config = config;
-        }else if (config.pbp == optimal_config.pbp &&
-                    config.first_accumulated_profit > optimal_config.first_accumulated_profit){
-          optimal_config = config;
-        }
-      }
-
-      console.log("optimal ", optimal_config)
-
-      return optimal_config
-      /**/
     }
 
     // -----
@@ -613,23 +550,6 @@
       // Set output
       const selected_config = response.data
       set_output( selected_config )
-      // --------------------
-
-      // // Set configuration
-      // const server_type = $('#server-type').val()
-      // const container_type = $('#container-type').val()
-
-      // const selected_config = config_list.filter( obj => 
-      //     (obj.server === server_type && obj.container === container_type))[0]
-
-      // // Set output
-      // if( selected_config == undefined ){
-      //   const optimal_text = `Not enough data`
-      //   $('.alert-optimal').text(optimal_text)
-      //   return;
-      // } 
-
-      // set_output( selected_config )
     }
 
     const initialise = async () => {
@@ -647,7 +567,6 @@
 
       // Genearte configuration
       $('.alert-optimal').html( banner_waiting() );
-      //await calculate_optimal_output_figures();
     }
 
     let typing_timer;
@@ -657,17 +576,7 @@
     let config_list = []
     $(document).ready( () => {
 
-      // -------------------------
-      $('.user-input-data').on('keyup', () => {
-        console.log("Typing event")
-        clearTimeout(typing_timer);
-        typing_timer = setTimeout(calculate_optimal_output_figures, completed_typing_interval);
-      })
-      $('.user-input-data').on('keydown', function () {
-        console.log("T")
-        //clearTimeout(typing_timer);
-      });
-      // -------------------------
+
 
 
       // Retrieve effbuckets
@@ -726,22 +635,16 @@
 
       // Initialise UI
       initialise()
-      /*
-      // User input is changing
-      //$('.user-input-data').on('input', () => calculate_optimal_output_figures() )
-      // Manual machine launching
+
+      // Wait for user to finish typing before searching optimal configuration
+      $('.user-input-data').on('keyup', () => {
+        clearTimeout(typing_timer);
+        typing_timer = setTimeout(calculate_optimal_output_figures, completed_typing_interval);
+      })
+      $('.user-input-data').on('keydown', () => clearTimeout(typing_timer) );
       $('.config-input-data').on('change', () => calculate_output_figures() )
       $('#server-type').on('change', () => update_select_container() )
-
-      // Retreive data from blockchain
-      axios.get('https://api.blockchain.info/stats').then( (response) => {
-        market_price_usd = response.data.market_price_usd;
-        hash_rate = response.data.hash_rate / 1000;
-        $('#market-price-usd').val(market_price_usd)
-        $('#hash-rate').val(hash_rate)
-      })
-
-      /**/
+      // -------------------------
 
     })
 
