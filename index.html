@@ -326,6 +326,7 @@
     // Meatze Firebase
     const machine_type_list = {}
     const scenario_list = {}
+    const container_list = {}
     const base_url = 'https://api.meatze.com'
 
     const fill_configurations = async () => {
@@ -351,13 +352,24 @@
         }
       }
 
+      // Retrieve containers
+      response = await axios.get(base_url + '/api/container/')
+      for(const item of response.data.results){
+        container_list[item.name] = {
+          uuid: item.uuid,
+          capex: item.capex,
+          factor: item.factor
+        }
+      }
+
+
 
       $("#machine-type").empty()
       for(const machine in machine_type_list ){ // Iterate on machines
         $("#machine-type").append(new Option(machine, machine));
       }
       $("#container-type").empty()
-      for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+      for(const container in container_list ){ // Iterate on containers
         $("#container-type").append(new Option(container, container));
       }
 
@@ -374,9 +386,9 @@
 
     const update_select_container = () => {
       $('#container-type').empty()
-        for(const container in CAPEX_CONTAINER ){ // Iterate on containers
+        for(const container in container_list ){ // Iterate on containers
           // When S9 / LiquidCooled remove LiquidCooled
-          if( $('#machine-type').val() == "S9" && container == "LiquidCooled") continue;
+          if( $('#machine-type').val() == "S9" && container == "Liquid Cooled") continue;
           // Add option
           $("#container-type").append(new Option(container, container));
         }
@@ -508,8 +520,7 @@
       }
 
       // Set optimal text
-      const optimal_text = `Optimal Configuration: Machine=${optimal_config.machine} / CONTAINER=${optimal_config.container}`
-      $('.alert-optimal').text(optimal_text)
+      $('.alert-optimal').html( banner_results(optimal_config.machine, optimal_config.container) )
 
       // Set configuration
       $('#machine-type').val( optimal_config.machine )

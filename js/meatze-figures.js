@@ -1,11 +1,11 @@
-const CAPEX_CONTAINER = {
-  AirCooled: 30000,
-  LiquidCooled: 100000
-}
-const CAPEX_CONTAINER_FACTOR = {
-  AirCooled: 1,
-  LiquidCooled: 1.3
-}
+// const CAPEX_CONTAINER = {
+//   AirCooled: 30000,
+//   LiquidCooled: 100000
+// }
+// const CAPEX_CONTAINER_FACTOR = {
+//   AirCooled: 1,
+//   LiquidCooled: 1.3
+// }
 
 
 // const project_size = $('#project-size').val()
