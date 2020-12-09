@@ -160,9 +160,9 @@
           <div class="col-md-6 input-group mb-3">
               <div class="input-group mb-3">
                   <div class="input-group-prepend">
-                    <label class="input-group-text" for="inputGroupSelect01">Server Type</label>
+                    <label class="input-group-text" for="inputGroupSelect01">Machine Type</label>
                   </div>
-                  <select class="custom-select config-input-data" id="server-type"></select>
+                  <select class="custom-select config-input-data" id="machine-type"></select>
                 </div>
             <small id="emailHelp" class="form-text text-muted"> "Small description" </small>
           </div>
@@ -314,7 +314,7 @@
     const banner_initialising = () => `<span>Initialising </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i></span>`
     const banner_waiting = () => `<span>Please introduce your configuration</span>`
     const banner_calculating = () => `<span>Calculating </span><i class="spinner ml-3 fa fa-spinner fa-spin" aria-hidden="true"></i></span>`
-    const banner_results = (machine, container) => `<span>Optimal Configuration: SERVER=${machine} / CONTAINER=${container}</span>`
+    const banner_results = (machine, container) => `<span>Optimal Configuration: MACHINE=${machine} / CONTAINER=${container}</span>`
 
     const SCENARIO_LIST = {
       pessimistic  : { market_price_usd_delta: 3,  hash_rate_delta: 6 },
@@ -324,7 +324,7 @@
     }
 
     // Meatze Firebase
-    const server_type_list = {}
+    const machine_type_list = {}
     const scenario_list = {}
     const base_url = 'https://api.meatze.com'
 
@@ -333,7 +333,7 @@
       // Retrieve machines
       let response = await axios.get( base_url + '/api/machine/')
       for(const item of response.data.results){
-        server_type_list[item.name] = {
+        machine_type_list[item.name] = {
           uuid: item.uuid,
           consumption: item.consumption,
           hashing: item.hashing,
@@ -352,9 +352,9 @@
       }
 
 
-      $("#server-type").empty()
-      for(const server in server_type_list ){ // Iterate on servers
-        $("#server-type").append(new Option(server, server));
+      $("#machine-type").empty()
+      for(const machine in machine_type_list ){ // Iterate on machines
+        $("#machine-type").append(new Option(machine, machine));
       }
       $("#container-type").empty()
       for(const container in CAPEX_CONTAINER ){ // Iterate on containers
@@ -376,7 +376,7 @@
       $('#container-type').empty()
         for(const container in CAPEX_CONTAINER ){ // Iterate on containers
           // When S9 / LiquidCooled remove LiquidCooled
-          if( $('#server-type').val() == "S9" && container == "LiquidCooled") continue;
+          if( $('#machine-type').val() == "S9" && container == "LiquidCooled") continue;
           // Add option
           $("#container-type").append(new Option(container, container));
         }
@@ -405,7 +405,7 @@
       }
 
       // Server / Container
-      $('#server-type').val(config.machine)
+      $('#machine-type').val(config.machine)
       $('#container-type').val(config.container)
       update_select_container()
 
@@ -491,7 +491,7 @@
     // Calculates the output configuration according to the user input
     // and sets the output
     // -----
-    const calculate_optimal_output_figures = async (server_type, container_type) => {
+    const calculate_optimal_output_figures = async () => {
       
       $('.alert-optimal').html( banner_calculating() );
 
@@ -512,7 +512,7 @@
       $('.alert-optimal').text(optimal_text)
 
       // Set configuration
-      $('#server-type').val( optimal_config.server )
+      $('#machine-type').val( optimal_config.machine )
       $('#container-type').val( optimal_config.container )
 
       // Set output
@@ -531,9 +531,9 @@
       const electricity_cost = $('#electricity-cost').val()
       const yearly_operation_hours = $('#yearly-hours').val()
       const scenario_selected = $('#scenario-type').val();
-      const server_selected = $('#server-type').val();
+      const machine_selected = $('#machine-type').val();
       const scenario = scenario_list[scenario_selected]
-      const machine = server_type_list[server_selected]
+      const machine = machine_type_list[machine_selected]
       const capex_container = $('#container-type').val()
 
       // Retrieve effbuckets
@@ -555,7 +555,7 @@
     const initialise = async () => {
 
 
-      // Fill server and container
+      // Fill machine and container
       $('.alert-optimal').html( banner_initialising() )
       
       await fill_configurations();
@@ -570,14 +570,11 @@
     }
 
     let typing_timer;
-    const completed_typing_interval = 3000;
+    const completed_typing_interval = 2000;
 
 
     let config_list = []
     $(document).ready( () => {
-
-
-
 
       // Retrieve effbuckets
       axios({
@@ -643,7 +640,7 @@
       })
       $('.user-input-data').on('keydown', () => clearTimeout(typing_timer) );
       $('.config-input-data').on('change', () => calculate_output_figures() )
-      $('#server-type').on('change', () => update_select_container() )
+      $('#machine-type').on('change', () => update_select_container() )
       // -------------------------
 
     })
