@@ -543,15 +543,17 @@
       const yearly_operation_hours = $('#yearly-hours').val()
       const scenario_selected = $('#scenario-type').val();
       const machine_selected = $('#machine-type').val();
+      const container_selected = $('#container-type').val()
+
       const scenario = scenario_list[scenario_selected]
       const machine = machine_type_list[machine_selected]
-      const capex_container = $('#container-type').val()
+      const container = container_list[container_selected]
 
       // Retrieve effbuckets
       const body = {
         scenario: scenario.uuid,
         machine: machine.uuid,
-        capex_container: capex_container, 
+        container: container.uuid, 
         project_size: project_size,
         electricity_cost: electricity_cost,
         yearly_operation_hours: yearly_operation_hours
