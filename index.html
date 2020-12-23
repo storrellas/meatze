@@ -105,10 +105,9 @@
           </thead>
           <tbody class="table-normalization text-center">
             <tr>
-              <td>Sergi</td>
-              <td>Sergi</td>
-              <td>Sergi</td>
-              <td>Sergi</td>
+              <td colspan="4">
+                </span><i class="spinner ml-3 fa fa-2x fa-spinner fa-spin" aria-hidden="true"></i>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -612,10 +611,8 @@
     const fill_normalization = async () => {
       try{
 
-        console.log("fill normalization")
-
         // Retrieve effbuckets
-        const response = await axios.post(base_url + '/api/config/normalized/')
+        const response = await axios.post(base_url + '/api/config/normalized/', {project_size: 1000000})
         console.log( "response ", response.data )
 
         $('.table-normalization').empty()
@@ -627,7 +624,7 @@
                               <td>${item.profit}</td>
                             </tr>`
         let html = ''                            
-        for(const item of response.data){
+        for(const item of response.data.results){
           console.log("item ", item )
           html += normalization_row(item)
         }
