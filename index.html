@@ -53,44 +53,86 @@
   <div class="container">
     <section class="mt-3" style="background-color: #DDDDDD; padding: 10px">
       <div class="row col-md-12 mt-3">
+        <h4>Project Normalization</h4>
+      </div>
+      <hr>
+      <div class="row col-md-12 mt-3">
         <h4>Hash Price</h4>
       </div>
       <div class="row mt-3">
-        <div class="col-md-6">          
-            <div>Price:<span class="ml-3 hash-price"></span></div>
+        <div class="col-md-6 input-group mb-3">
+          <div class="input-group">
+            <input type="number" class="form-control price-per-terahash" id="price-per-terahash" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Price [Th/MW]</span>
+            </div>
+          </div>
         </div>
-        <div>          
-          <div>Timestamp:<span class="ml-3 hash-timestamp"></span></div>
+
+        <div class="col-md-6 input-group mb-3">
+          <div class="input-group">
+            <input type="string" class="form-control price-timestamp" id="price-timestamp" placeholder="Timestamp" aria-label="Tiemstamp"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Timestamp</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="row col-md-12 mt-3">
-        <h5>
-          Data retrieved from <a href="https://hashrateindex.com/coins/bitcoin">https://hashrateindex.com/coins/bitcoin</a> 
-        </h5>
       </div>
 
       
       <div class="row col-md-12 mt-3">
-        <h4>asic_scraping_usd_th_effbuckets</h4>
+        <h4>Efficiency Buckets</h4>
       </div>
       <div class="row mt-3">
-        <div class="col-md-6">          
-          <div>Under38:<span class="ml-3 under-38"></span></div>
+
+        <div class="col-md-3 input-group mb-3">
+          <div class="input-group">
+            <input type="number" class="form-control under-38" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Under 38</span>
+            </div>
+          </div>
         </div>
-        <div>          
-          <div>Between38-60:<span class="ml-3 between-38-60"></span></div>
+
+        <div class="col-md-3 input-group mb-3">
+          <div class="input-group">
+            <input type="number" class="form-control between-38-60" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Between 38,60</span>
+            </div>
+          </div>
         </div>
+
+        <div class="col-md-3 input-group mb-3">
+          <div class="input-group">
+            <input type="number" class="form-control between-60-100" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Between 60,100</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 input-group mb-3">
+          <div class="input-group">
+            <input type="number" class="form-control greater-100" placeholder="Project Size" aria-label="Project Size"
+              aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <span class="input-group-text" id="basic-addon2">Greater 100</span>
+            </div>
+          </div>
+        </div>        
+
+        
       </div>
 
-      <div class="row mt-3">
-        <div class="col-md-6">          
-          <div>Between60-100:<span class="ml-3 between-60-100"></span></div>
-        </div>
-        <div>          
-          <div>Greater100:<span class="ml-3 greater-100"></span></div>
-        </div>
+      <div class="row col-md-12 mt-3">
+        <h4>Normalization</h4>
       </div>
-
 
       <div class="row col-12 mt-3">
 
@@ -98,7 +140,7 @@
           <thead  class="text-center" style="background-color: #282828; color: #DDDDDD">
             <tr>
               <th scope="col">Name</th>
-              <th scope="col">Terash</th>
+              <th scope="col">Terahash</th>
               <th scope="col">Cost</th>
               <th scope="col">Profit</th>              
             </tr>
@@ -630,6 +672,34 @@
         }
         $('.table-normalization').append(html)
 
+
+        // Set parameters in UI
+        const bucket_list = response.data.bucket_list
+        $('.under-38').val( bucket_list.filter(obj => obj.bucket == 'under38')[0].value )
+        $('.between-38-60').val( bucket_list.filter(obj => obj.bucket == 'between38_60')[0].value )
+        $('.between-60-100').val( bucket_list.filter(obj => obj.bucket == 'between60_100')[0].value )
+        $('.greater-100').val( bucket_list.filter(obj => obj.bucket == 'greater100')[0].value )
+
+        // Fill normalization
+        $('.price-per-terahash').val(response.data.price_per_terahash)
+
+        Number.prototype.pad = function(size) {
+          var s = String(this);
+          while (s.length < (size || 2)) {s = "0" + s;}
+          return s;
+        }
+
+        // Convert timestamp to date
+        const timestamp = response.data.created
+        const date = new Date(timestamp * 1000);
+        const year = date.getFullYear().pad(2);
+        const month = date.getMonth().pad(2);
+        const day = date.getDate().pad(2);
+        const hour = date.getHours().pad(2);
+        const min = date.getMinutes().pad(2);
+        const sec = date.getSeconds().pad(2);      
+        $('.price-timestamp').val( `${day}/${month}/${year} ${hour}:${min}:${sec}` )
+        
       }catch(e){
         console.log("error ", e)
       }
@@ -639,58 +709,6 @@
     const completed_typing_interval = 2000;
     let config_list = [];
     $(document).ready( () => {
-
-      // Retrieve effbuckets
-      axios({
-        url: 'https://hasura-prod.artemis.luxorlabs.dev/v1/graphql',
-        method: 'post',
-        data: {
-          query: `query {
-                      asic_scraping_usd_th_effbuckets(order_by: { time: desc }, limit: 1) {
-                          under38
-                          between38_60
-                          between60_100
-                          greater100
-                      }
-                  }`
-        }
-      }).then( (result) => {
-
-        // Get Parameters
-        const under38 = result.data.data.asic_scraping_usd_th_effbuckets[0].under38
-        const between38_60 = result.data.data.asic_scraping_usd_th_effbuckets[0].between38_60
-        const between60_100 = result.data.data.asic_scraping_usd_th_effbuckets[0].between60_100
-        const greater100 = result.data.data.asic_scraping_usd_th_effbuckets[0].greater100
-
-        // Set parameters in UI
-        $('.under-38').text( under38 )
-        $('.between-38-60').text( between38_60 )
-        $('.between-60-100').text( between60_100 )
-        $('.greater-100').text( greater100 )
-        
-      });
-
-      // Retrieve hashprices
-      axios({
-        url: 'https://hasura-prod.artemis.luxorlabs.dev/v1/graphql',
-        method: 'post',
-        data: {
-          query: `query {
-                    hashprices(from: 1, interval: "1h", coinSymbol: "BTC"){
-                        hashprice
-                        timestamp
-                        __typename
-                    }
-                  }`
-        }
-      }).then((result) => {
-
-        // <div class="hash-price"></div>
-        // <div class="hash-timestamp"></div>
-        const hash_recent = result.data.data.hashprices[0]
-        $('.hash-price').text(hash_recent.hashprice)
-        $('.hash-timestamp').text(hash_recent.timestamp)
-      });
 
       fill_normalization()
 
