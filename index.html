@@ -90,6 +90,31 @@
           <div>Greater100:<span class="ml-3 greater-100"></span></div>
         </div>
       </div>
+
+
+      <div class="row col-12 mt-3">
+
+        <table id="normalization-table" class="table" style="background-color: #F5F5F5	">
+          <thead  class="text-center" style="background-color: #282828; color: #DDDDDD">
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Terash</th>
+              <th scope="col">Cost</th>
+              <th scope="col">Profit</th>              
+            </tr>
+          </thead>
+          <tbody class="table-normalization text-center">
+            <tr>
+              <td>Sergi</td>
+              <td>Sergi</td>
+              <td>Sergi</td>
+              <td>Sergi</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+
     </section>
 
 
@@ -271,7 +296,7 @@
               <th scope="col">Accumulated Monthly Income</th>              
             </tr>
           </thead>
-          <tbody class="text-center">
+          <tbody class="table-simulation text-center">
             <tr>
               <td colspan="4">
                 </span><i class="spinner ml-3 fa fa-2x fa-spinner fa-spin" aria-hidden="true"></i>
@@ -374,7 +399,7 @@
       }
 
       $('#scenario-type').empty()
-      for(const scenario in scenario_list ){ // Iterate on containers
+      for( const scenario in scenario_list ){ // Iterate on containers
         const scenario_first_uppercase = scenario[0].charAt(0).toUpperCase()+scenario.slice(1);
         const scenario_obj = scenario_list[scenario]
         const text = scenario_first_uppercase + " - " + 
@@ -430,7 +455,7 @@
                             <td>${opex_monthly}</td>
                             <td>${accumulated}</td>
                             </tr>`;
-      $('#result-table tbody').empty()
+      $('#result-table .table-simulation').empty()
       if(config.pbp !== undefined && config.pbp > 0 ){
         for( let i = 0; i < config.evolution.length; i++){
           const date = new Date();  
@@ -449,7 +474,7 @@
       }else{
         row_list = '<tr><td colspan="4" class="text-center">Project not profitable</td></tr>'
       }
-      $('#result-table tbody').html( row_list )
+      $('#result-table .table-simulation').html( row_list )
 
 
       // Generate chart data
@@ -582,11 +607,40 @@
       $('.alert-optimal').html( banner_waiting() );
     }
 
+
+
+    const fill_normalization = async () => {
+      try{
+
+        console.log("fill normalization")
+
+        // Retrieve effbuckets
+        const response = await axios.post(base_url + '/api/config/normalized/')
+        console.log( "response ", response.data )
+
+        $('.table-normalization').empty()
+        const normalization_row = (item) => 
+                            `<tr>
+                              <td>${item.name}</td>
+                              <td>${item.terahash}</td>
+                              <td>${item.cost}</td>
+                              <td>${item.profit}</td>
+                            </tr>`
+        let html = ''                            
+        for(const item of response.data){
+          console.log("item ", item )
+          html += normalization_row(item)
+        }
+        $('.table-normalization').append(html)
+
+      }catch(e){
+        console.log("error ", e)
+      }
+    }
+
     let typing_timer;
     const completed_typing_interval = 2000;
-
-
-    let config_list = []
+    let config_list = [];
     $(document).ready( () => {
 
       // Retrieve effbuckets
@@ -603,7 +657,7 @@
                       }
                   }`
         }
-      }).then((result) => {
+      }).then( (result) => {
 
         // Get Parameters
         const under38 = result.data.data.asic_scraping_usd_th_effbuckets[0].under38
@@ -641,7 +695,7 @@
         $('.hash-timestamp').text(hash_recent.timestamp)
       });
 
-
+      fill_normalization()
 
       // Initialise UI
       initialise()
