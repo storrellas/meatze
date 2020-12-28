@@ -89,7 +89,7 @@
 
         <div class="col-md-3 input-group mb-3">
           <div class="input-group">
-            <input type="number" class="form-control under-38" placeholder="Project Size" aria-label="Project Size"
+            <input type="text" class="form-control under-38" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">Under 38</span>
@@ -99,7 +99,7 @@
 
         <div class="col-md-3 input-group mb-3">
           <div class="input-group">
-            <input type="number" class="form-control between-38-60" placeholder="Project Size" aria-label="Project Size"
+            <input type="text" class="form-control between-38-60" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">Between 38,60</span>
@@ -109,7 +109,7 @@
 
         <div class="col-md-3 input-group mb-3">
           <div class="input-group">
-            <input type="number" class="form-control between-60-100" placeholder="Project Size" aria-label="Project Size"
+            <input type="text" class="form-control between-60-100" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">Between 60,100</span>
@@ -119,7 +119,7 @@
 
         <div class="col-md-3 input-group mb-3">
           <div class="input-group">
-            <input type="number" class="form-control greater-100" placeholder="Project Size" aria-label="Project Size"
+            <input type="text" class="form-control greater-100" placeholder="Project Size" aria-label="Project Size"
               aria-describedby="basic-addon2">
             <div class="input-group-append">
               <span class="input-group-text" id="basic-addon2">Greater 100</span>
@@ -656,20 +656,18 @@
 
         // Retrieve effbuckets
         const response = await axios.post(base_url + '/api/config/normalized/', {project_size: 1000000})
-        console.log( "response ", response.data )
 
         $('.table-normalization').empty()
         const normalization_row = (item) => 
                             `<tr>                             
                               <td>${item.name}</td>
                               <td>${item.bucket}</td>
-                              <td>${item.terahash_per_sec}</td>
-                              <td>${item.cost_per_mw}</td>
-                              <td>${item.profit_per_mw}</td>
+                              <td>${item.terahash_per_sec.toFixed(2)}</td>
+                              <td>${item.cost_per_mw.toFixed(2)}</td>
+                              <td>${item.profit_per_mw.toFixed(2)}</td>
                             </tr>`
         let html = ''                            
         for(const item of response.data.results){
-          console.log("item ", item )
           html += normalization_row(item)
         }
         $('.table-normalization').append(html)
@@ -677,10 +675,10 @@
 
         // Set parameters in UI
         const bucket_list = response.data.bucket_list
-        $('.under-38').val( bucket_list.filter(obj => obj.bucket == 'under38')[0].value )
-        $('.between-38-60').val( bucket_list.filter(obj => obj.bucket == 'between38_60')[0].value )
-        $('.between-60-100').val( bucket_list.filter(obj => obj.bucket == 'between60_100')[0].value )
-        $('.greater-100').val( bucket_list.filter(obj => obj.bucket == 'greater100')[0].value )
+        $('.under-38').val( bucket_list.filter(obj => obj.bucket == 'under38')[0].value.toFixed(2) )
+        $('.between-38-60').val( bucket_list.filter(obj => obj.bucket == 'between38_60')[0].value.toFixed(2) )
+        $('.between-60-100').val( bucket_list.filter(obj => obj.bucket == 'between60_100')[0].value.toFixed(2) )
+        $('.greater-100').val( bucket_list.filter(obj => obj.bucket == 'greater100')[0].value.toFixed(2) )
 
         // Fill normalization
         $('.price-per-terahash').val(response.data.price_per_terahash)
@@ -700,7 +698,7 @@
         const hour = date.getHours().pad(2);
         const min = date.getMinutes().pad(2);
         const sec = date.getSeconds().pad(2);      
-        $('.price-timestamp').val( `${day}/${month}/${year} ${hour}:${min}:${sec}` )
+        $('.price-timestamp').val( `${day}/${month}/${year} ${hour}:${min}` )
         
       }catch(e){
         console.log("error ", e)
