@@ -140,6 +140,7 @@
           <thead  class="text-center" style="background-color: #282828; color: #DDDDDD">
             <tr>
               <th scope="col">Efficiency</th>
+              <th scope="col">Bucket</th>
               <th scope="col">Th/s</th>
               <th scope="col">$/MW</th>
               <th scope="col">Capex/MW</th>
@@ -659,11 +660,12 @@
 
         $('.table-normalization').empty()
         const normalization_row = (item) => 
-                            `<tr>
+                            `<tr>                             
                               <td>${item.name}</td>
-                              <td>${item.terahash}</td>
-                              <td>${item.cost}</td>
-                              <td>${item.profit}</td>
+                              <td>${item.bucket}</td>
+                              <td>${item.terahash_per_sec}</td>
+                              <td>${item.cost_per_mw}</td>
+                              <td>${item.profit_per_mw}</td>
                             </tr>`
         let html = ''                            
         for(const item of response.data.results){
