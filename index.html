@@ -22,7 +22,7 @@
     }
     #normalizedchartdiv {
       width: 100%;
-      height: 300px;
+      height: 500px;
     }
   </style>
 
@@ -718,7 +718,6 @@
         const response = await axios.post(base_url + '/api/config/normalized/series/', {project_size: 1000000, days: 200})
 
         const chart_data = []
-        console.log("response.data ", response.data)
         for(const item of response.data.chart){
           chart_data.push({
             'date': new Date(item.created*1000),
@@ -730,7 +729,7 @@
         }
         normalization_chart.data = chart_data;
 
-
+        // Adding labels to leggendSettings
         normalization_chart.series._values[0].legendSettings.labelText = "35W/Th";
         normalization_chart.series._values[1].legendSettings.labelText = "40W/Th";
         normalization_chart.series._values[2].legendSettings.labelText = "50W/Th";
@@ -864,10 +863,6 @@
       // Create chart instance
       normalization_chart = am4core.create("normalizedchartdiv", am4charts.XYChart);
 
-
-      // chart_list1 = generatechartData()
-      // chart_list2 = generatechartData2()
-
       // Add data
       normalization_chart.data = [];
 
@@ -885,7 +880,7 @@
       series1.dataFields.valueY = "value1";
       series1.dataFields.dateX = "date";
       series1.strokeWidth = 3;
-      series1.tooltipText = "{valueY.value}";
+      series1.tooltipText = "{value1}";
       series1.fillOpacity = 0.1;
 
 
@@ -893,21 +888,21 @@
       series2.dataFields.valueY = "value2";
       series2.dataFields.dateX = "date";
       series2.strokeWidth = 3;
-      series2.tooltipText = "{valueY.value}";
+      series2.tooltipText = "{value2}";
       series2.fillOpacity = 0.1;
 
       var series3 = normalization_chart.series.push(new am4charts.LineSeries());
       series3.dataFields.valueY = "value3";
       series3.dataFields.dateX = "date";
       series3.strokeWidth = 3;
-      series3.tooltipText = "{valueY.value}";
+      series3.tooltipText = "{value3}";
       series3.fillOpacity = 0.1;
 
       var series4 = normalization_chart.series.push(new am4charts.LineSeries());
       series4.dataFields.valueY = "value4";
       series4.dataFields.dateX = "date";
       series4.strokeWidth = 3;
-      series4.tooltipText = "{valueY.value}";
+      series4.tooltipText = "{value4}";
       series4.fillOpacity = 0.1;
 
       // Create a range to change stroke for values below 0
