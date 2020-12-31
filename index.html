@@ -20,6 +20,10 @@
       width: 100%;
       height: 500px;
     }
+    #normalizedchartdiv {
+      width: 100%;
+      height: 300px;
+    }
   </style>
 
 </head>
@@ -155,6 +159,11 @@
           </tbody>
         </table>
 
+      </div>
+
+
+      <div class="col-md-12">
+        <div id="normalizedchartdiv"></div>
       </div>
 
     </section>
@@ -527,12 +536,10 @@
         date.setDate(1);
         date.setMonth( date.getMonth() + i );  
 
-        chart_data_list.push( { date:date, value: config.evolution[i].accumulated})
+        chart_data_list.push( { date: date, value: config.evolution[i].accumulated})
       }
-
-
-      chart.data = chart_data_list
-      //chart.data = generatechartData()
+      optimal_chart.data = chart_data_list
+      //optimal_chart.data = generatechartData()
       /**/
     }
 
@@ -553,7 +560,7 @@
       const scenario_selected = $('#scenario-type').val();
       const scenario = scenario_list[scenario_selected]
 
-      // Retrieve effbuckets
+      // Retrieve optimal config
       const body = {
         scenario: scenario.uuid,
         project_size: project_size,
@@ -674,14 +681,13 @@
 
 
         // Set parameters in UI
-        const bucket_list = response.data.bucket_list
-        $('.under-38').val( bucket_list.filter(obj => obj.bucket == 'under38')[0].value.toFixed(2) )
-        $('.between-38-60').val( bucket_list.filter(obj => obj.bucket == 'between38_60')[0].value.toFixed(2) )
-        $('.between-60-100').val( bucket_list.filter(obj => obj.bucket == 'between60_100')[0].value.toFixed(2) )
-        $('.greater-100').val( bucket_list.filter(obj => obj.bucket == 'greater100')[0].value.toFixed(2) )
+        $('.under-38').val( response.data.luxor_data.bucket_under38 )
+        $('.between-38-60').val( response.data.luxor_data.bucket_between38_60 )
+        $('.between-60-100').val( response.data.luxor_data.bucket_between60_100 )
+        $('.greater-100').val( response.data.luxor_data.bucket_greater100 )
 
         // Fill normalization
-        $('.price-per-terahash').val(response.data.price_per_terahash)
+        $('.price-per-terahash').val(response.data.luxor_data.price_per_terahash)
 
         Number.prototype.pad = function(size) {
           var s = String(this);
@@ -690,7 +696,7 @@
         }
 
         // Convert timestamp to date
-        const timestamp = response.data.created
+        const timestamp = response.data.luxor_data.created
         const date = new Date(timestamp * 1000);
         const year = date.getFullYear().pad(2);
         const month = date.getMonth().pad(2);
@@ -704,6 +710,37 @@
         console.log("error ", e)
       }
     }
+    
+    const fill_normalization_series = async () => {
+      try{
+
+        // Retrieve effbuckets
+        const response = await axios.post(base_url + '/api/config/normalized/series/', {project_size: 1000000, days: 200})
+
+        const chart_data = []
+        console.log("response.data ", response.data)
+        for(const item of response.data.chart){
+          chart_data.push({
+            'date': new Date(item.created*1000),
+            'value1': item.results.filter(subitem => subitem.name == '35W/Th')[0].profit_per_mw,
+            'value2': item.results.filter(subitem => subitem.name == '40W/Th')[0].profit_per_mw,
+            'value3': item.results.filter(subitem => subitem.name == '50W/Th')[0].profit_per_mw,
+            'value4': item.results.filter(subitem => subitem.name == '70W/Th')[0].profit_per_mw,
+          })
+        }
+        normalization_chart.data = chart_data;
+
+
+        normalization_chart.series._values[0].legendSettings.labelText = "35W/Th";
+        normalization_chart.series._values[1].legendSettings.labelText = "40W/Th";
+        normalization_chart.series._values[2].legendSettings.labelText = "50W/Th";
+        normalization_chart.series._values[3].legendSettings.labelText = "70W/Th";
+        
+        
+      }catch(e){
+        console.log("error ", e)
+      }
+    }
 
     let typing_timer;
     const completed_typing_interval = 2000;
@@ -711,6 +748,7 @@
     $(document).ready( () => {
 
       fill_normalization()
+      fill_normalization_series()
 
       // Initialise UI
       initialise()
@@ -727,14 +765,18 @@
 
     })
 
-    let chart = null;
+    let optimal_chart = null;
+    let normalization_chart = null;
 
 // -------------------------------------------
     // function generatechartData() {
     //   var chartData = [];
     //   var firstDate = new Date();
     //   firstDate.setDate(firstDate.getDate() - 150);
-    //   var visits = -40;
+    //   var value1 = -40;
+    //   var value2 = -40;
+    //   var value3 = -40;
+    //   var value4 = -40;
     //   var b = 0.6;
     //   for (var i = 0; i < 150; i++) {
     //     // we create date objects here. In your data, you can have date strings
@@ -745,11 +787,17 @@
     //     if (i > 80) {
     //       b = 0.4;
     //     }
-    //     visits += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    //     value1 += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    //     value2 += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    //     value3 += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
+    //     value4 += Math.round((Math.random() < b ? 1 : -1) * Math.random() * 10);
 
     //     chartData.push({
     //       date: newDate,
-    //       value: visits
+    //       value1: value1,
+    //       value2: value2,
+    //       value3: value3,
+    //       value4: value4
     //     });
     //   }
     //   console.log( chartData )
@@ -758,14 +806,9 @@
 
 // -------------------------------------------
 
-    am4core.ready(function () {
-
-      // Themes begin
-      am4core.useTheme(am4themes_animated);
-      // Themes end
-
+    function config_optimal_chart(){
       // Create chart instance
-      chart = am4core.create("chartdiv", am4charts.XYChart);
+      optimal_chart = am4core.create("chartdiv", am4charts.XYChart);
 
 
       // chart_list1 = generatechartData()
@@ -773,19 +816,19 @@
 
       // Add data
       //chart.data = generatechartData();
-      chart.data = [];
+      optimal_chart.data = [];
 
 
       // Create axes
-      var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+      var dateAxis = optimal_chart.xAxes.push(new am4charts.DateAxis());
       dateAxis.startLocation = 0.5;
       dateAxis.endLocation = 0.5;
 
       // Create value axis
-      var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+      var valueAxis = optimal_chart.yAxes.push(new am4charts.ValueAxis());
 
       // Create series
-      var series = chart.series.push(new am4charts.LineSeries());
+      var series = optimal_chart.series.push(new am4charts.LineSeries());
       series.dataFields.valueY = "value";
       series.dataFields.dateX = "date";
       series.strokeWidth = 3;
@@ -797,24 +840,131 @@
       range.value = 0;
       //range.endValue = -1000;
       range.endValue = -1000 * 1000 * 1000 * 1000;
-      range.contents.stroke = chart.colors.getIndex(4);
+      range.contents.stroke = optimal_chart.colors.getIndex(4);
       range.contents.fill = range.contents.stroke;
       range.contents.strokeOpacity = 0.7;
       range.contents.fillOpacity = 0.1;
 
       // Add cursor
-      chart.cursor = new am4charts.XYCursor();
-      chart.cursor.xAxis = dateAxis;
-      chart.scrollbarX = new am4core.Scrollbar();
+      optimal_chart.cursor = new am4charts.XYCursor();
+      optimal_chart.cursor.xAxis = dateAxis;
+      optimal_chart.scrollbarX = new am4core.Scrollbar();
 
       series.tooltip.getFillFromObject = false;
       series.tooltip.adapter.add("x", (x, target) => {
 
         series.tooltip.background.fill = 
-          series.tooltip.tooltipDataItem.valueY < 0?chart.colors.getIndex(4):chart.colors.getIndex(0);
+          series.tooltip.tooltipDataItem.valueY < 0?optimal_chart.colors.getIndex(4):optimal_chart.colors.getIndex(0);
 
         return x;
       })
+    }
+
+    function config_normalized_chart(){
+      // Create chart instance
+      normalization_chart = am4core.create("normalizedchartdiv", am4charts.XYChart);
+
+
+      // chart_list1 = generatechartData()
+      // chart_list2 = generatechartData2()
+
+      // Add data
+      normalization_chart.data = [];
+
+
+      // Create axes
+      var dateAxis = normalization_chart.xAxes.push(new am4charts.DateAxis());
+      dateAxis.startLocation = 0.5;
+      dateAxis.endLocation = 0.5;
+
+      // Create value axis
+      var valueAxis = normalization_chart.yAxes.push(new am4charts.ValueAxis());
+
+      // Create series
+      var series1 = normalization_chart.series.push(new am4charts.LineSeries());
+      series1.dataFields.valueY = "value1";
+      series1.dataFields.dateX = "date";
+      series1.strokeWidth = 3;
+      series1.tooltipText = "{valueY.value}";
+      series1.fillOpacity = 0.1;
+
+
+      var series2 = normalization_chart.series.push(new am4charts.LineSeries());
+      series2.dataFields.valueY = "value2";
+      series2.dataFields.dateX = "date";
+      series2.strokeWidth = 3;
+      series2.tooltipText = "{valueY.value}";
+      series2.fillOpacity = 0.1;
+
+      var series3 = normalization_chart.series.push(new am4charts.LineSeries());
+      series3.dataFields.valueY = "value3";
+      series3.dataFields.dateX = "date";
+      series3.strokeWidth = 3;
+      series3.tooltipText = "{valueY.value}";
+      series3.fillOpacity = 0.1;
+
+      var series4 = normalization_chart.series.push(new am4charts.LineSeries());
+      series4.dataFields.valueY = "value4";
+      series4.dataFields.dateX = "date";
+      series4.strokeWidth = 3;
+      series4.tooltipText = "{valueY.value}";
+      series4.fillOpacity = 0.1;
+
+      // Create a range to change stroke for values below 0
+      var range = valueAxis.createSeriesRange(series1);
+      range.value = 0;
+      //range.endValue = -1000;
+      range.endValue = -1000 * 1000 * 1000 * 1000;
+      range.contents.stroke = normalization_chart.colors.getIndex(4);
+      range.contents.fill = range.contents.stroke;
+      range.contents.strokeOpacity = 0.7;
+      range.contents.fillOpacity = 0.1;
+
+      
+      // Add cursor
+      normalization_chart.cursor = new am4charts.XYCursor();
+      normalization_chart.cursor.xAxis = dateAxis;
+      normalization_chart.scrollbarX = new am4core.Scrollbar();
+
+      series1.tooltip.getFillFromObject = false;
+      series1.tooltip.adapter.add("x", (x, target) => {
+        series1.tooltip.background.fill = normalization_chart.colors.getIndex(0);          
+        return x;
+      })
+      series2.tooltip.getFillFromObject = false;
+      series2.tooltip.adapter.add("x", (x, target) => {
+        series2.tooltip.background.fill = normalization_chart.colors.getIndex(1);
+        return x;
+      })
+      series3.tooltip.getFillFromObject = false;
+      series3.tooltip.adapter.add("x", (x, target) => {
+        series3.tooltip.background.fill = normalization_chart.colors.getIndex(2);
+        return x;
+      })
+      series4.tooltip.getFillFromObject = false;
+      series4.tooltip.adapter.add("x", (x, target) => {
+        series4.tooltip.background.fill = normalization_chart.colors.getIndex(3);
+        return x;
+      })
+
+      normalization_chart.legend = new am4charts.Legend();
+      normalization_chart.legend.maxHeight = 150;
+      normalization_chart.legend.scrollable = true;
+
+    }
+
+    am4core.ready(function () {
+
+      // Themes begin
+      am4core.useTheme(am4themes_animated);
+      // Themes end
+
+      // optimal
+      config_optimal_chart()
+
+      // normalized
+      config_normalized_chart()
+
 
     }); // end am4core.ready()
   </script>
